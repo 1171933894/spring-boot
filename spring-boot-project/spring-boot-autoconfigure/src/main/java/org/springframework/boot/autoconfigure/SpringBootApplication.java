@@ -48,6 +48,10 @@ import org.springframework.data.repository.Repository;
  * @author Andy Wilkinson
  * @since 1.2.0
  */
+
+/**
+ * @SpringBootApplication是一个组合注解：该注解用来说明被标注的类为SpringBoot的主配置类，如果想要启动该SpringBoot应用就需要运行这个类的main方法，这个方法就是主入口。
+ */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
