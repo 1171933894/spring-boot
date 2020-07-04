@@ -31,10 +31,11 @@ import org.springframework.context.annotation.Configuration;
  * @author Stephane Nicoll
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnMissingBean(CacheManager.class)
+@ConditionalOnMissingBean(CacheManager.class)//判断条件，每个配置类都有，满足条件配置类才会生效。
 @Conditional(CacheCondition.class)
 class SimpleCacheConfiguration {
 
+	// 给容器中添加一个缓存管理器
 	@Bean
 	ConcurrentMapCacheManager cacheManager(CacheProperties cacheProperties,
 			CacheManagerCustomizers cacheManagerCustomizers) {
