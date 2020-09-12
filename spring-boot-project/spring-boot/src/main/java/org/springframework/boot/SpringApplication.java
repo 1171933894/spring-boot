@@ -269,6 +269,7 @@ public class SpringApplication {
 		Assert.notNull(primarySources, "PrimarySources must not be null");
 		this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
 		this.webApplicationType = WebApplicationType.deduceFromClasspath();
+		// 设置“初始化器”
 		setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
 		setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
 		this.mainApplicationClass = deduceMainApplicationClass();
