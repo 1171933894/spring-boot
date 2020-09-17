@@ -16,13 +16,6 @@
 
 package org.springframework.boot.autoconfigure;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.context.TypeExcludeFilter;
 import org.springframework.context.annotation.Bean;
@@ -32,6 +25,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.repository.Repository;
+
+import java.lang.annotation.*;
 
 /**
  * Indicates a {@link Configuration configuration} class that declares one or more
@@ -50,7 +45,7 @@ import org.springframework.data.repository.Repository;
 @Documented
 @Inherited
 @SpringBootConfiguration
-@EnableAutoConfiguration
+@EnableAutoConfiguration// 开启自动配置的注解
 @ComponentScan(excludeFilters = { @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
 		@Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
 public @interface SpringBootApplication {
@@ -59,7 +54,13 @@ public @interface SpringBootApplication {
 	 * Exclude specific auto-configuration classes such that they will never be applied.
 	 * @return the classes to exclude
 	 */
+	// 排除指定自动配置类（该成员属性覆盖了@SpringBoot-Application中组合的@EnableAutoConfiguration中定义的exclude成员属性）
 	@AliasFor(annotation = EnableAutoConfiguration.class)
+	/**
+	 * 该注解用于桥接到其他注解，该注解的属性中指定了所桥接的注解类。如果点进去查看，会发现@SpringBootApplication
+	 * 定义的属性在其他注解中已经定义过了。之所以使用@AliasFor注解并重新在@SpringBootApplication中定义，更多是为
+	 * 了减少用户使用多注解带来的麻烦。
+	 */
 	Class<?>[] exclude() default {};
 
 	/**
@@ -68,6 +69,7 @@ public @interface SpringBootApplication {
 	 * @return the class names to exclude
 	 * @since 1.3.0
 	 */
+	// 排除指定自动配置类名（该成员属性覆盖了@SpringBoot-Application中组合的@EnableAutoConfiguration中定义的exclude成员属性）
 	@AliasFor(annotation = EnableAutoConfiguration.class)
 	String[] excludeName() default {};
 
@@ -83,6 +85,7 @@ public @interface SpringBootApplication {
 	 * @return base packages to scan
 	 * @since 1.3.0
 	 */
+	// 指定扫描的基础包, 激活注解组件的初始化
 	@AliasFor(annotation = ComponentScan.class, attribute = "basePackages")
 	String[] scanBasePackages() default {};
 
@@ -101,6 +104,7 @@ public @interface SpringBootApplication {
 	 * @return base packages to scan
 	 * @since 1.3.0
 	 */
+	// 指定扫描的类, 用于初始化
 	@AliasFor(annotation = ComponentScan.class, attribute = "basePackageClasses")
 	Class<?>[] scanBasePackageClasses() default {};
 
@@ -125,6 +129,15 @@ public @interface SpringBootApplication {
 	 * equivalent to removing the {@code @Configuration} stereotype.
 	 * @since 2.2
 	 * @return whether to proxy {@code @Bean} methods
+	 */
+	// 指定是否代理@Bean方法以强制执行bean的生命周期行为
+
+	/**
+	 * 指定是否代理@Bean方法以强制执行bean的生命周期行为。此功能需要通过运行时生成CGLIB子类来实现方法拦截。
+	 * 该子类有一定的限制，比如配置类及其方法不允许声明为final等。proxyBeanMethods的默认值为true，允许
+	 * 配置类中进行inter-bean references（bean之间的引用）以及对该配置的@Bean方法的外部调用。如果@Bean
+	 * 方法都是自包含的，并且仅提供了容器使用的普通工程方法的功能，则可设置为false，避免处理CGLIB子类。
+	 * Spring Boot 2.2版本上市后新增该成员属性。
 	 */
 	@AliasFor(annotation = Configuration.class)
 	boolean proxyBeanMethods() default true;

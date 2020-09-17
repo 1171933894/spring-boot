@@ -16,28 +16,10 @@
 
 package org.springframework.boot.autoconfigure;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.Aware;
-import org.springframework.beans.factory.BeanClassLoaderAware;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.BeanFactoryAware;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.beans.factory.*;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.EnvironmentAware;
@@ -56,6 +38,10 @@ import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
+
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * {@link DeferredImportSelector} to handle {@link EnableAutoConfiguration
@@ -90,13 +76,17 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 
 	@Override
 	public String[] selectImports(AnnotationMetadata annotationMetadata) {
+		// 检查自动配置功能是否开启, 默认为开启
 		if (!isEnabled(annotationMetadata)) {
 			return NO_IMPORTS;
 		}
+		// 加载自动配置的元信息, 配置文件为类路径中META-INF目录下的spring-autoconfigure-metadata.properties文件
 		AutoConfigurationMetadata autoConfigurationMetadata = AutoConfigurationMetadataLoader
 				.loadMetadata(this.beanClassLoader);
+		// 封装将被引入的自动配置信息
 		AutoConfigurationEntry autoConfigurationEntry = getAutoConfigurationEntry(autoConfigurationMetadata,
 				annotationMetadata);
+		// 返回符合条件的配置类的全限定名数组
 		return StringUtils.toStringArray(autoConfigurationEntry.getConfigurations());
 	}
 
@@ -113,12 +103,20 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 			return EMPTY_ENTRY;
 		}
 		AnnotationAttributes attributes = getAttributes(annotationMetadata);
+		// 通过SpringFactoriesLoader类提供的方法加载类路径中META-INF目录下的
+		// spring.factories文件中针对EnableAutoConfiguration的注册配置类
 		List<String> configurations = getCandidateConfigurations(annotationMetadata, attributes);
+		// 对获得的注册配置类集合进行去重处理, 防止多个项目引入同样的配置类
 		configurations = removeDuplicates(configurations);
+		// 获得注解中被exclude或excludeName所排除的类的集合
 		Set<String> exclusions = getExclusions(annotationMetadata, attributes);
+		// 检查被排除类是否可实例化, 是否被自动注册配置所使用, 不符合条件则抛出异常
 		checkExcludedClasses(configurations, exclusions);
+		// 从自动配置类集合中去除被排除的类
 		configurations.removeAll(exclusions);
+		// 检查配置类的注解是否符合spring.factories文件中AutoConfigurationImportFilter指定的注解检查条件
 		configurations = filter(configurations, autoConfigurationMetadata);
+		// 将筛选完成的配置类和排查的配置类构建为事件类, 并传入监听器。监听器的配置在于spring.factories文件中, 通过AutoConfigurationImportListener指定
 		fireAutoConfigurationImportEvents(configurations, exclusions);
 		return new AutoConfigurationEntry(configurations, exclusions);
 	}
