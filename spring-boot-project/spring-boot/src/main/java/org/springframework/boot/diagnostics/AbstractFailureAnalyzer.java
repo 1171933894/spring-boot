@@ -53,6 +53,7 @@ public abstract class AbstractFailureAnalyzer<T extends Throwable> implements Fa
 	 */
 	@SuppressWarnings("unchecked")
 	protected Class<? extends T> getCauseType() {
+		// 获取类上泛型方法
 		return (Class<? extends T>) ResolvableType.forClass(AbstractFailureAnalyzer.class, getClass()).resolveGeneric();
 	}
 
