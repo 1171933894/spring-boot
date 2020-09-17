@@ -16,15 +16,15 @@
 
 package org.springframework.boot.autoconfigure;
 
+import org.springframework.core.io.UrlResource;
+import org.springframework.core.io.support.PropertiesLoaderUtils;
+import org.springframework.util.StringUtils;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.Set;
-
-import org.springframework.core.io.UrlResource;
-import org.springframework.core.io.support.PropertiesLoaderUtils;
-import org.springframework.util.StringUtils;
 
 /**
  * Internal utility used to load {@link AutoConfigurationMetadata}.
@@ -33,21 +33,30 @@ import org.springframework.util.StringUtils;
  */
 final class AutoConfigurationMetadataLoader {
 
+	// 默认加载元数据的路径
 	protected static final String PATH = "META-INF/spring-autoconfigure-metadata.properties";
 
 	private AutoConfigurationMetadataLoader() {
 	}
 
+	// 默认调用该方法, 传入默认PATH
 	static AutoConfigurationMetadata loadMetadata(ClassLoader classLoader) {
 		return loadMetadata(classLoader, PATH);
 	}
 
+	/**
+	 * AutoConfigurationMetadataLoader调用loadMetadata(ClassLoader classLoader)方法，会获取默认变量PATH指定的文件，
+	 * 然后加载并存储于Enumeration数据结构中。随后，从变量PATH指定的文件中获取其中配置的属性存储于Properties内，最终调用在该类
+	 * 内部实现的AutoConfigurationMetadata的子类的构造方法
+	 */
 	static AutoConfigurationMetadata loadMetadata(ClassLoader classLoader, String path) {
 		try {
+			// 获取数据存储于Enumeration中
 			Enumeration<URL> urls = (classLoader != null) ? classLoader.getResources(path)
 					: ClassLoader.getSystemResources(path);
 			Properties properties = new Properties();
 			while (urls.hasMoreElements()) {
+				// 遍历Enumeration中的URL, 加载其中的属性, 存储到Properties中
 				properties.putAll(PropertiesLoaderUtils.loadProperties(new UrlResource(urls.nextElement())));
 			}
 			return loadMetadata(properties);
@@ -64,6 +73,7 @@ final class AutoConfigurationMetadataLoader {
 	/**
 	 * {@link AutoConfigurationMetadata} implementation backed by a properties file.
 	 */
+	// AutoConfigurationMetadata的内部实现类
 	private static class PropertiesAutoConfigurationMetadata implements AutoConfigurationMetadata {
 
 		private final Properties properties;

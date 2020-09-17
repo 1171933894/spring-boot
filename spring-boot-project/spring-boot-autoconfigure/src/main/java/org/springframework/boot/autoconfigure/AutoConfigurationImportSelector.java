@@ -107,10 +107,19 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 		// spring.factories文件中针对EnableAutoConfiguration的注册配置类
 		List<String> configurations = getCandidateConfigurations(annotationMetadata, attributes);
 		// 对获得的注册配置类集合进行去重处理, 防止多个项目引入同样的配置类
+		/**
+		 * 因为程序默认加载的是ClassLoader下面的所有META-INF/spring.factories文件中的配置，
+		 * 所以难免在不同的jar包中出现重复的配置。我们可以在源代码中使用Set集合数据不可重复的特性
+		 * 进行去重操作
+		 */
 		configurations = removeDuplicates(configurations);
 		// 获得注解中被exclude或excludeName所排除的类的集合
 		Set<String> exclusions = getExclusions(annotationMetadata, attributes);
 		// 检查被排除类是否可实例化, 是否被自动注册配置所使用, 不符合条件则抛出异常
+		/**
+		 * checkExcludedClasses方法用来确保被排除的类存在于当前的ClassLoader中，并且包含在
+		 * spring.factories注册的集合中。如果不满足以上条件，调用handleInvalidExcludes方法抛出异常
+		 */
 		checkExcludedClasses(configurations, exclusions);
 		// 从自动配置类集合中去除被排除的类
 		configurations.removeAll(exclusions);
@@ -166,8 +175,10 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 	 * @return a list of candidate configurations
 	 */
 	protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttributes attributes) {
+		// getSpringFactoriesLoaderFactoryClass方法返回的EnableAutoConfiguration.class，也就是说loadFactoryNames只会读取配置文件中针对自动配置的注册类
 		List<String> configurations = SpringFactoriesLoader.loadFactoryNames(getSpringFactoriesLoaderFactoryClass(),
 				getBeanClassLoader());
+		// 程序未读取到任何配置内容，会抛出异常信息
 		Assert.notEmpty(configurations, "No auto configuration classes found in META-INF/spring.factories. If you "
 				+ "are using a custom packaging, make sure that file is correct.");
 		return configurations;
@@ -183,14 +194,16 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 	}
 
 	private void checkExcludedClasses(List<String> configurations, Set<String> exclusions) {
+		// 遍历并判断是否存在对应的配置类
 		List<String> invalidExcludes = new ArrayList<>(exclusions.size());
 		for (String exclusion : exclusions) {
 			if (ClassUtils.isPresent(exclusion, getClass().getClassLoader()) && !configurations.contains(exclusion)) {
 				invalidExcludes.add(exclusion);
 			}
 		}
+		// 如果不为空, 就进行处理
 		if (!invalidExcludes.isEmpty()) {
-			handleInvalidExcludes(invalidExcludes);
+			handleInvalidExcludes(invalidExcludes);// 抛出指定异常
 		}
 	}
 
@@ -216,7 +229,12 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 	 * attributes}
 	 * @return exclusions or an empty set
 	 */
+	/**
+	 * 收集@EnableAutoConfiguration注解中配置的exclude属性值、excludeName属性值，并通过方法
+	 * getExcludeAutoConfigurationsProperty获取在配置文件中key为spring.autoconfigure.exclude的配置值
+	 */
 	protected Set<String> getExclusions(AnnotationMetadata metadata, AnnotationAttributes attributes) {
+		// 创建Set集合并把待排除的内容存于集合内, LinkedHashSet具有不可重复性
 		Set<String> excluded = new LinkedHashSet<>();
 		excluded.addAll(asList(attributes, "exclude"));
 		excluded.addAll(Arrays.asList(attributes.getStringArray("excludeName")));
@@ -234,11 +252,24 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 		return (excludes != null) ? Arrays.asList(excludes) : Collections.emptyList();
 	}
 
+	/**
+	 * @param configurations List，经过初次过滤之后的自动配置组件列表
+	 * @param autoConfigurationMetadata AutoConfigurationMetadata，元数据文件META-INF/spring-autoconfigure-metadata.properties中配置对应实体类。
+	 * @return
+	 */
 	private List<String> filter(List<String> configurations, AutoConfigurationMetadata autoConfigurationMetadata) {
 		long startTime = System.nanoTime();
 		String[] candidates = StringUtils.toStringArray(configurations);
 		boolean[] skip = new boolean[candidates.length];
 		boolean skipped = false;
+		// 通过SpringFactoriesLoader的loadFactories方法将META-INF/spring.factories中配置key为AutoConfigurationImportFilter的值进行加载
+		/**
+		 * # Auto Configuration Import Filters
+		 * org.springframework.boot.autoconfigure.AutoConfigurationImportFilter=\
+		 * org.springframework.boot.autoconfigure.condition.OnBeanCondition,\
+		 * org.springframework.boot.autoconfigure.condition.OnClassCondition,\
+		 * org.springframework.boot.autoconfigure.condition.OnWebApplicationCondition
+		 */
 		for (AutoConfigurationImportFilter filter : getAutoConfigurationImportFilters()) {
 			invokeAwareMethods(filter);
 			boolean[] match = filter.match(candidates, autoConfigurationMetadata);
