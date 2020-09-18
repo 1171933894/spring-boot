@@ -450,13 +450,15 @@ public class SpringApplication {
 	}
 
 	private void refreshContext(ConfigurableApplicationContext context) {
+		// 调用refresh方法
 		refresh(context);
 		if (this.registerShutdownHook) {
 			try {
+				// 注册shutdownHook线程, 实现销毁时的回调
 				context.registerShutdownHook();
 			}
 			catch (AccessControlException ex) {
-				// Not allowed in some environments.
+				// Not allowed in some environments. 在某些环境中不允许使用, 会报出此异常, 但此处并无处理操作
 			}
 		}
 	}
@@ -849,6 +851,7 @@ public class SpringApplication {
 	 * @param args the application arguments
 	 */
 	protected void afterRefresh(ConfigurableApplicationContext context, ApplicationArguments args) {
+		// 默认实现为空，留给子类去扩展
 	}
 
 	private void callRunners(ApplicationContext context, ApplicationArguments args) {
