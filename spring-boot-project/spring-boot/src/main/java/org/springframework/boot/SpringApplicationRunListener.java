@@ -39,6 +39,7 @@ public interface SpringApplicationRunListener {
 	 * Called immediately when the run method has first started. Can be used for very
 	 * early initialization.
 	 */
+	// 当run方法第一次被执行时, 会被立即调用, 可用于非常早期的初始化工作
 	default void starting() {
 	}
 
@@ -47,6 +48,7 @@ public interface SpringApplicationRunListener {
 	 * {@link ApplicationContext} has been created.
 	 * @param environment the environment
 	 */
+	// 当environment准备完成, 在ApplicationContext创建之前, 该方法被调用
 	default void environmentPrepared(ConfigurableEnvironment environment) {
 	}
 
@@ -55,6 +57,7 @@ public interface SpringApplicationRunListener {
 	 * before sources have been loaded.
 	 * @param context the application context
 	 */
+	// 当ApplicationContext构建完成, 资源还未被加载时, 该方法被调用
 	default void contextPrepared(ConfigurableApplicationContext context) {
 	}
 
@@ -63,6 +66,7 @@ public interface SpringApplicationRunListener {
 	 * refreshed.
 	 * @param context the application context
 	 */
+	// 当ApplicationContext加载完成, 未被刷新之前, 该方法被调用
 	default void contextLoaded(ConfigurableApplicationContext context) {
 	}
 
@@ -73,6 +77,7 @@ public interface SpringApplicationRunListener {
 	 * @param context the application context.
 	 * @since 2.0.0
 	 */
+	// 当ApplicationContext刷新并启动之后, CommandLineRunner和ApplicationRunner未被调用之前, 该方法被调用
 	default void started(ConfigurableApplicationContext context) {
 	}
 
@@ -83,6 +88,7 @@ public interface SpringApplicationRunListener {
 	 * @param context the application context.
 	 * @since 2.0.0
 	 */
+	// 当所有准备工作就绪, run方法执行完成之前, 该方法被调用
 	default void running(ConfigurableApplicationContext context) {
 	}
 
@@ -93,6 +99,7 @@ public interface SpringApplicationRunListener {
 	 * @param exception the failure
 	 * @since 2.0.0
 	 */
+	// 当应用程序出现错误时, 该方法被调用
 	default void failed(ConfigurableApplicationContext context, Throwable exception) {
 	}
 

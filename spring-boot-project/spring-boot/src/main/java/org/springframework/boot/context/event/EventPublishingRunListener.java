@@ -43,6 +43,10 @@ import org.springframework.util.ErrorHandler;
  * @author Artsiom Yudovin
  * @since 1.0.0
  */
+
+/**
+ * EventPublishingRunListener是Spring Boot中针对SpringApplicationRunListener接口的唯一内建实现
+ */
 public class EventPublishingRunListener implements SpringApplicationRunListener, Ordered {
 
 	private final SpringApplication application;
@@ -54,7 +58,12 @@ public class EventPublishingRunListener implements SpringApplicationRunListener,
 	public EventPublishingRunListener(SpringApplication application, String[] args) {
 		this.application = application;
 		this.args = args;
+		// 创建SimpleApplicationEventMulticaster广播器
 		this.initialMulticaster = new SimpleApplicationEventMulticaster();
+		/**
+		 * 遍历SpringApplication的所有ApplicationListener实例，并将它们与SimpleApplicationEventMulticaster
+		 * 进行关联，方便SimpleApplicationEventMulticaster后续将事件传递给所有的监听器
+		 */
 		for (ApplicationListener<?> listener : application.getListeners()) {
 			this.initialMulticaster.addApplicationListener(listener);
 		}
@@ -82,14 +91,23 @@ public class EventPublishingRunListener implements SpringApplicationRunListener,
 				.multicastEvent(new ApplicationContextInitializedEvent(this.application, this.args, context));
 	}
 
+	/**
+	 * 也正是这个方法形成了不同事件广播形式的分水岭，在此方法之前执行的事件广播都是通过multicastEvent来进行的，
+	 * 而该方法之后的方法则均采用publishEvent来执行。这是因为只有到了contextLoaded方法之后，上下文才算初始化
+	 * 完成，才可通过它的publishEvent方法来进行事件的发布。
+	 */
 	@Override
 	public void contextLoaded(ConfigurableApplicationContext context) {
+		// 遍历SpringApplication中的所有监听器实现类
 		for (ApplicationListener<?> listener : this.application.getListeners()) {
+			// 如果为ApplicationContextAware, 则将上下文信息设置到该监听器内
 			if (listener instanceof ApplicationContextAware) {
 				((ApplicationContextAware) listener).setApplicationContext(context);
 			}
+			// 将SpringApplication中的监听器实现类全部添加到上下文中
 			context.addApplicationListener(listener);
 		}
+		// 广播事件ApplicationPreparedEvent
 		this.initialMulticaster.multicastEvent(new ApplicationPreparedEvent(this.application, this.args, context));
 	}
 

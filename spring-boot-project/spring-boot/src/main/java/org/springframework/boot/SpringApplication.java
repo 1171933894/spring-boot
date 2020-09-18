@@ -362,15 +362,22 @@ public class SpringApplication {
 	private ConfigurableEnvironment prepareEnvironment(SpringApplicationRunListeners listeners,
 			ApplicationArguments applicationArguments) {
 		// Create and configure the environment
+		// 获取或创建环境
 		ConfigurableEnvironment environment = getOrCreateEnvironment();
+		// 配置环境, 主要包括PropertySources和activeProfiles的配置
 		configureEnvironment(environment, applicationArguments.getSourceArgs());
+		// 将ConfigurationPropertySources附加到指定环境中的第一位, 并动态跟踪环境的添加或删除
 		ConfigurationPropertySources.attach(environment);
+		// listener环境准备
 		listeners.environmentPrepared(environment);
+		// 将环境绑定到SpringApplication
 		bindToSpringApplication(environment);
+		// 判断是否定制的环境, 如果不是定制的则将环境转换为StandardEnvironment
 		if (!this.isCustomEnvironment) {
 			environment = new EnvironmentConverter(getClassLoader()).convertEnvironmentIfNecessary(environment,
 					deduceEnvironmentClass());
 		}
+		// 将ConfigurationPropertySources附加到指定环境中的第一位, 并动态跟踪环境的添加或删除
 		ConfigurationPropertySources.attach(environment);
 		return environment;
 	}
@@ -434,7 +441,9 @@ public class SpringApplication {
 	}
 
 	private SpringApplicationRunListeners getRunListeners(String[] args) {
+		// 构造Class数组（SpringApplicationRunListener的实现类必须有默认的构造方法，且构造方法的参数必须依次为SpringApplication和String[ ]类型）
 		Class<?>[] types = new Class<?>[] { SpringApplication.class, String[].class };
+		// 调用SpringApplicationRunListeners构造方法
 		return new SpringApplicationRunListeners(logger,
 				getSpringFactoriesInstances(SpringApplicationRunListener.class, types, this, args));
 	}
