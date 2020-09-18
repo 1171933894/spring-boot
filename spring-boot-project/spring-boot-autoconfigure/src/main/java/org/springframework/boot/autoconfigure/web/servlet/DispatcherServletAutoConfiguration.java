@@ -63,7 +63,7 @@ import org.springframework.web.servlet.DispatcherServlet;
  * @author Brian Clozel
  * @since 2.0.0
  */
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)// 指定自动配置加载的顺序
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnWebApplication(type = Type.SERVLET)
 @ConditionalOnClass(DispatcherServlet.class)
