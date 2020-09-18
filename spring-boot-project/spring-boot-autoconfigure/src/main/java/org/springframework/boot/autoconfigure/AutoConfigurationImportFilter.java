@@ -54,6 +54,12 @@ public interface AutoConfigurationImportFilter {
 	 * {@code autoConfigurationClasses} parameter. Entries containing {@code false} will
 	 * not be imported.
 	 */
+	/**
+	 *
+	 * @param autoConfigurationClasses 待过滤的自动配置类数组
+	 * @param autoConfigurationMetadata 自动配置的元数据信息
+	 * @return 匹配过滤后的结果布尔数组，数组的大小与String[ ] autoConfigurationClasses一致，如果需排除，设置对应值为false
+	 */
 	boolean[] match(String[] autoConfigurationClasses, AutoConfigurationMetadata autoConfigurationMetadata);
 
 }

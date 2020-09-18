@@ -49,6 +49,7 @@ class OnClassCondition extends FilteringSpringBootCondition {
 		// Split the work and perform half in a background thread if more than one
 		// processor is available. Using a single additional thread seems to offer the
 		// best performance. More threads make things worse.
+		// 如果有多个处理器, 采用后台线程处理
 		if (Runtime.getRuntime().availableProcessors() > 1) {
 			return resolveOutcomesThreaded(autoConfigurationClasses, autoConfigurationMetadata);
 		}
@@ -223,6 +224,7 @@ class OnClassCondition extends FilteringSpringBootCondition {
 			return null;
 		}
 
+		// 判断该类是否符合条件
 		private ConditionOutcome getOutcome(String className, ClassLoader classLoader) {
 			if (ClassNameFilter.MISSING.matches(className, classLoader)) {
 				return ConditionOutcome.noMatch(ConditionMessage.forCondition(ConditionalOnClass.class)

@@ -60,6 +60,7 @@ abstract class FilteringSpringBootCondition extends SpringBootCondition
 		return match;
 	}
 
+	// 过滤核心功能, 该方法由子类实现
 	protected abstract ConditionOutcome[] getOutcomes(String[] autoConfigurationClasses,
 			AutoConfigurationMetadata autoConfigurationMetadata);
 
@@ -103,6 +104,7 @@ abstract class FilteringSpringBootCondition extends SpringBootCondition
 	 * @return a resolved class
 	 * @throws ClassNotFoundException if the class cannot be found
 	 */
+	// 进行类加载操作
 	protected static Class<?> resolve(String className, ClassLoader classLoader) throws ClassNotFoundException {
 		if (classLoader != null) {
 			return classLoader.loadClass(className);
@@ -132,6 +134,7 @@ abstract class FilteringSpringBootCondition extends SpringBootCondition
 
 		abstract boolean matches(String className, ClassLoader classLoader);
 
+		// 通过类加载是否抛出异常来判断该类是否存在
 		static boolean isPresent(String className, ClassLoader classLoader) {
 			if (classLoader == null) {
 				classLoader = ClassUtils.getDefaultClassLoader();
