@@ -40,11 +40,11 @@ import org.springframework.web.filter.CharacterEncodingFilter;
  * @author Brian Clozel
  * @since 2.0.0
  */
-@Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(HttpProperties.class)
-@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-@ConditionalOnClass(CharacterEncodingFilter.class)
-@ConditionalOnProperty(prefix = "spring.http.encoding", value = "enabled", matchIfMissing = true)
+@Configuration(proxyBeanMethods = false)// 指定该类作为配置项来进行实例化操作
+@EnableConfigurationProperties(HttpProperties.class)// 参数为HttpProperties.class，开启属性注入，会将参数中的HttpProperties注入该类
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)// 参数为Type.SERVLET，说明该类只有在基于servlet的Web应用中才会被实例化
+@ConditionalOnClass(CharacterEncodingFilter.class)// 指定实例化的条件为类路径下必须有CharacterEncodingFilter存在
+@ConditionalOnProperty(prefix = "spring.http.encoding", value = "enabled", matchIfMissing = true)// 指定配置文件内spring.http.encoding对应的值，如果为enabled才会进行实例化，没有配置则默认为true
 public class HttpEncodingAutoConfiguration {
 
 	private final HttpProperties.Encoding properties;
@@ -54,7 +54,7 @@ public class HttpEncodingAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingBean
+	@ConditionalOnMissingBean// 注释于方法上，与@Bean配合，当容器中没有该Bean的实例化对象时才会进行实例化
 	public CharacterEncodingFilter characterEncodingFilter() {
 		CharacterEncodingFilter filter = new OrderedCharacterEncodingFilter();
 		filter.setEncoding(this.properties.getCharset().name());
