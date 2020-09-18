@@ -81,6 +81,7 @@ public class EventPublishingRunListener implements SpringApplicationRunListener,
 
 	@Override
 	public void environmentPrepared(ConfigurableEnvironment environment) {
+		// 在META-INF/spring.factories中注册的ConfigFileApplicationListener会监听到对应事件，并进行相应的处理
 		this.initialMulticaster
 				.multicastEvent(new ApplicationEnvironmentPreparedEvent(this.application, this.args, environment));
 	}

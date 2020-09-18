@@ -549,7 +549,7 @@ public class SpringApplication {
 			ConversionService conversionService = ApplicationConversionService.getSharedInstance();
 			environment.setConversionService((ConfigurableConversionService) conversionService);
 		}
-		// 配置PropertySources
+		// 配置PropertySources（在configurePropertySources方法中对参数进行了真正的解析和封装）
 		configurePropertySources(environment, args);
 		// 配置Profiles
 		configureProfiles(environment, args);

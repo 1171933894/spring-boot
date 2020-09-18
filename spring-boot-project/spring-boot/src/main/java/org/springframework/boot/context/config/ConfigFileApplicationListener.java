@@ -107,9 +107,11 @@ public class ConfigFileApplicationListener implements EnvironmentPostProcessor, 
 
 	private static final String DEFAULT_PROPERTIES = "defaultProperties";
 
+	// 默认的加载配置文件路径
 	// Note the order is from least to most specific (last one wins)
 	private static final String DEFAULT_SEARCH_LOCATIONS = "classpath:/,classpath:/config/,file:./,file:./config/";
 
+	// 默认的配置文件名称
 	private static final String DEFAULT_NAMES = "application";
 
 	private static final Set<String> NO_SEARCH_NAMES = Collections.singleton(null);
@@ -130,6 +132,7 @@ public class ConfigFileApplicationListener implements EnvironmentPostProcessor, 
 	/**
 	 * The "active profiles" property name.
 	 */
+	// 激活配置文件的属性名
 	public static final String ACTIVE_PROFILES_PROPERTY = "spring.profiles.active";
 
 	/**
@@ -173,6 +176,7 @@ public class ConfigFileApplicationListener implements EnvironmentPostProcessor, 
 
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
+		// 对应前面发布的事件, 执行此业务逻辑
 		if (event instanceof ApplicationEnvironmentPreparedEvent) {
 			onApplicationEnvironmentPreparedEvent((ApplicationEnvironmentPreparedEvent) event);
 		}
@@ -185,6 +189,7 @@ public class ConfigFileApplicationListener implements EnvironmentPostProcessor, 
 		List<EnvironmentPostProcessor> postProcessors = loadPostProcessors();
 		postProcessors.add(this);
 		AnnotationAwareOrderComparator.sort(postProcessors);
+		// 遍历并依次调用其postProcessEnvironment方法
 		for (EnvironmentPostProcessor postProcessor : postProcessors) {
 			postProcessor.postProcessEnvironment(event.getEnvironment(), event.getSpringApplication());
 		}
