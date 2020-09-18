@@ -338,6 +338,7 @@ public class SpringApplication {
 			listeners.started(context);
 			/**
 			 * 调用启动加载器（调用ApplicationRunner和CommandLineRunner的运行方法）
+			 * 如果有多个实现类，可通过@Order注解或实现Ordered接口来控制执行顺序
 			 */
 			callRunners(context, applicationArguments);
 		}
