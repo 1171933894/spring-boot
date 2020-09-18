@@ -488,9 +488,11 @@ public class SpringApplication {
 	}
 
 	private ConfigurableEnvironment getOrCreateEnvironment() {
+		// 如果environment存在，则直接返回
 		if (this.environment != null) {
 			return this.environment;
 		}
+		// 根据不同的应用类型, 创建不同的环境实现
 		switch (this.webApplicationType) {
 		case SERVLET:
 			return new StandardServletEnvironment();
@@ -513,11 +515,14 @@ public class SpringApplication {
 	 * @see #configurePropertySources(ConfigurableEnvironment, String[])
 	 */
 	protected void configureEnvironment(ConfigurableEnvironment environment, String[] args) {
+		// 如果为true则获取并设置转换服务
 		if (this.addConversionService) {
 			ConversionService conversionService = ApplicationConversionService.getSharedInstance();
 			environment.setConversionService((ConfigurableConversionService) conversionService);
 		}
+		// 配置PropertySources
 		configurePropertySources(environment, args);
+		// 配置Profiles
 		configureProfiles(environment, args);
 	}
 
@@ -529,12 +534,16 @@ public class SpringApplication {
 	 * @see #configureEnvironment(ConfigurableEnvironment, String[])
 	 */
 	protected void configurePropertySources(ConfigurableEnvironment environment, String[] args) {
+		// 获得环境中的属性资源信息
 		MutablePropertySources sources = environment.getPropertySources();
+		// 如果默认属性配置存在则将其放置于属性资源的最后位置
 		if (this.defaultProperties != null && !this.defaultProperties.isEmpty()) {
 			sources.addLast(new MapPropertySource("defaultProperties", this.defaultProperties));
 		}
+		// 如果命令行属性存在
 		if (this.addCommandLineProperties && args.length > 0) {
 			String name = CommandLinePropertySource.COMMAND_LINE_PROPERTY_SOURCE_NAME;
+			// 如果默认属性资源中不包含该命令, 则将命令行属性放置在第一位, 如果包含, 则通过CompositePropertySource进行处理
 			if (sources.contains(name)) {
 				PropertySource<?> source = sources.get(name);
 				CompositePropertySource composite = new CompositePropertySource(name);
@@ -559,7 +568,9 @@ public class SpringApplication {
 	 * @see org.springframework.boot.context.config.ConfigFileApplicationListener
 	 */
 	protected void configureProfiles(ConfigurableEnvironment environment, String[] args) {
+		// 如果存在的额外的Profiles, 则将其放置在第一位, 随后再获得其他的Profiles
 		Set<String> profiles = new LinkedHashSet<>(this.additionalProfiles);
+		// 保证环境的activeProfiles属性被初始化, 如果未初始化该方法会对其初始化
 		profiles.addAll(Arrays.asList(environment.getActiveProfiles()));
 		environment.setActiveProfiles(StringUtils.toStringArray(profiles));
 	}
