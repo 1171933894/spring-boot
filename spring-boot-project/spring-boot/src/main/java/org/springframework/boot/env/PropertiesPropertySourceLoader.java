@@ -42,12 +42,15 @@ public class PropertiesPropertySourceLoader implements PropertySourceLoader {
 		return new String[] { "properties", "xml" };
 	}
 
+	// 加载指定的配置文件
 	@Override
 	public List<PropertySource<?>> load(String name, Resource resource) throws IOException {
+		// 调用load方法进行加载并返回Map形式的数据
 		Map<String, ?> properties = loadProperties(resource);
 		if (properties.isEmpty()) {
 			return Collections.emptyList();
 		}
+		// 对返回结果进行处理和转换
 		return Collections
 				.singletonList(new OriginTrackedMapPropertySource(name, Collections.unmodifiableMap(properties), true));
 	}
@@ -55,9 +58,11 @@ public class PropertiesPropertySourceLoader implements PropertySourceLoader {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Map<String, ?> loadProperties(Resource resource) throws IOException {
 		String filename = resource.getFilename();
+		// 加载xml格式
 		if (filename != null && filename.endsWith(XML_FILE_EXTENSION)) {
 			return (Map) PropertiesLoaderUtils.loadProperties(resource);
 		}
+		// 加载properties格式
 		return new OriginTrackedPropertiesLoader(resource).load();
 	}
 
