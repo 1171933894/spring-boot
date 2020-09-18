@@ -290,44 +290,69 @@ public class SpringApplication {
 	 * @param args the application arguments (usually passed from a Java main method)
 	 * @return a running {@link ApplicationContext}
 	 */
+	/**
+	 * 在run方法中重点做了以下操作：
+	 * 1）获取监听器和参数配置。
+	 * 2）打印Banner信息。
+	 * 3）创建并初始化容器。
+	 * 4）监听器发送通知
+	 */
 	public ConfigurableApplicationContext run(String... args) {
+		// 创建StopWatch对象, 用于统计run方法启动时长
 		StopWatch stopWatch = new StopWatch();
-		stopWatch.start();
+		stopWatch.start();// 启动统计
 		ConfigurableApplicationContext context = null;
 		Collection<SpringBootExceptionReporter> exceptionReporters = new ArrayList<>();
+		// 配置 headless 属性
 		configureHeadlessProperty();
+		// 获得 SpringApplicationRunListener 数组，该数组封装于SpringApplicationRunListeners对象的listeners中
 		SpringApplicationRunListeners listeners = getRunListeners(args);
+		// 启动监听, 遍历SpringApplicationRunListener数组每个元素, 并执行
 		listeners.starting();
 		try {
+			// 创建ApplicationArguments对象
 			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
+			// 加载属性配置, 包括所有的配置属性(如：application.properties中和外部的属性配置)
 			ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
 			configureIgnoreBeanInfo(environment);
+			// 打印Banner
 			Banner printedBanner = printBanner(environment);
-			context = createApplicationContext();// 容器启动类初始化
+			// 创建容器
+			context = createApplicationContext();
+			// 异常报告器
 			exceptionReporters = getSpringFactoriesInstances(SpringBootExceptionReporter.class,
 					new Class[] { ConfigurableApplicationContext.class }, context);
+			// 准备容器, 组件对象之间进行关联
 			prepareContext(context, environment, listeners, applicationArguments, printedBanner);
+			// 初始化容器
 			refreshContext(context);
+			// 初始化操作之后执行, 默认实现为空
 			afterRefresh(context, applicationArguments);
+			// 停止时长统计
 			stopWatch.stop();
+			// 打印启动日志
 			if (this.logStartupInfo) {
 				new StartupInfoLogger(this.mainApplicationClass).logStarted(getApplicationLog(), stopWatch);
 			}
+			// 通知监听器：容器启动完成
 			listeners.started(context);
 			/**
-			 * 调用启动加载器
+			 * 调用启动加载器（调用ApplicationRunner和CommandLineRunner的运行方法）
 			 */
 			callRunners(context, applicationArguments);
 		}
 		catch (Throwable ex) {
+			// 异常处理
 			handleRunFailure(context, ex, exceptionReporters, listeners);
 			throw new IllegalStateException(ex);
 		}
 
 		try {
+			// 通知监听器：容器正在运行
 			listeners.running(context);
 		}
 		catch (Throwable ex) {
+			// 异常处理
 			handleRunFailure(context, ex, exceptionReporters, null);
 			throw new IllegalStateException(ex);
 		}
@@ -1125,13 +1150,17 @@ public class SpringApplication {
 	 * @return an immutable set of all sources
 	 */
 	public Set<Object> getAllSources() {
+		// 创建去除的LinkedHashSet
 		Set<Object> allSources = new LinkedHashSet<>();
+		// primarySources不为空则加入Set
 		if (!CollectionUtils.isEmpty(this.primarySources)) {
 			allSources.addAll(this.primarySources);
 		}
+		// sources不为空则加入Set
 		if (!CollectionUtils.isEmpty(this.sources)) {
 			allSources.addAll(this.sources);
 		}
+		// 对Set进行包装, 变为不可变的Set
 		return Collections.unmodifiableSet(allSources);
 	}
 
