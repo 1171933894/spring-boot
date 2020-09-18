@@ -238,35 +238,48 @@ public class SpringApplication {
 	 * @see #run(Class, String[])
 	 * @see #setSources(Set)
 	 */
+	/**
+	 * 在SpringApplication对象实例化的过程中主要做了3件事：
+	 * 1）参数赋值给成员变量
+	 * 2）应用类型及方法推断
+	 * 3）ApplicationContext相关内容加载及实例化
+	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySources) {
 		this.resourceLoader = resourceLoader;
 		Assert.notNull(primarySources, "PrimarySources must not be null");
 		this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
-		this.webApplicationType = WebApplicationType.deduceFromClasspath();// 根据classpath下是否存在特定类来决定
-		// 设置“初始化器”
+		// 推断Web应用类型：根据classpath下是否存在特定类来决定
+		this.webApplicationType = WebApplicationType.deduceFromClasspath();
+		// 加载并初始化ApplicationContextInitializer及相关实现类
 		/**
 		 * 三种实现注册方法：
 		 * 1）定义在spring.factories文件中被SpringFacotriesLoader发现注册
-		 * 2）SpringAplication初始化完毕后手动添加
+		 * 2）SpringAplication初始化完毕后手动添加（添加自定义ContextInitializer, 注意会覆盖掉默认配置的）
 		 * 3）定义环境变量DelegatingApplicationContextInitializer发现注册（优先级最高）
 		 */
+		// 注意：该初始化器在refresh前执行
 		setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
+		// 加载并初始化ApplicationListener及相关实现类
 		setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
+		// 推断main方法Class类
 		this.mainApplicationClass = deduceMainApplicationClass();
 	}
 
 	private Class<?> deduceMainApplicationClass() {
 		try {
+			// 获取栈元素数组
 			StackTraceElement[] stackTrace = new RuntimeException().getStackTrace();
+			// 遍历栈元素数组
 			for (StackTraceElement stackTraceElement : stackTrace) {
+				// 匹配第一个main方法, 并返回
 				if ("main".equals(stackTraceElement.getMethodName())) {
 					return Class.forName(stackTraceElement.getClassName());
 				}
 			}
 		}
 		catch (ClassNotFoundException ex) {
-			// Swallow and continue
+			// Swallow and continue 如果发生异常, 忽略该异常, 并继续执行
 		}
 		return null;
 	}
@@ -408,8 +421,11 @@ public class SpringApplication {
 	private <T> Collection<T> getSpringFactoriesInstances(Class<T> type, Class<?>[] parameterTypes, Object... args) {
 		ClassLoader classLoader = getClassLoader();
 		// Use names and ensure unique to protect against duplicates
+		// 加载对应配置, 这里采用LinkedHashSet和名称来确保加载的唯一性
 		Set<String> names = new LinkedHashSet<>(SpringFactoriesLoader.loadFactoryNames(type, classLoader));
+		// 创建实例
 		List<T> instances = createSpringFactoriesInstances(type, parameterTypes, classLoader, args, names);
+		// 排序操作
 		AnnotationAwareOrderComparator.sort(instances);
 		return instances;
 	}
@@ -418,11 +434,15 @@ public class SpringApplication {
 	private <T> List<T> createSpringFactoriesInstances(Class<T> type, Class<?>[] parameterTypes,
 			ClassLoader classLoader, Object[] args, Set<String> names) {
 		List<T> instances = new ArrayList<>(names.size());
+		// 遍历加载到的类名(全限定名)
 		for (String name : names) {
 			try {
+				// 获取Class
 				Class<?> instanceClass = ClassUtils.forName(name, classLoader);
 				Assert.isAssignable(type, instanceClass);
+				// 获取有参构造器
 				Constructor<?> constructor = instanceClass.getDeclaredConstructor(parameterTypes);
+				// 创建对象
 				T instance = (T) BeanUtils.instantiateClass(constructor, args);
 				instances.add(instance);
 			}
@@ -1063,6 +1083,7 @@ public class SpringApplication {
 	 * @see #setSources(Set)
 	 * @see #getAllSources()
 	 */
+	// 追加primarySources的方法
 	public void addPrimarySources(Collection<Class<?>> additionalPrimarySources) {
 		this.primarySources.addAll(additionalPrimarySources);
 	}
@@ -1141,7 +1162,7 @@ public class SpringApplication {
 	 * @param initializers the initializers to set
 	 */
 	public void setInitializers(Collection<? extends ApplicationContextInitializer<?>> initializers) {
-		this.initializers = new ArrayList<>(initializers);
+		this.initializers = new ArrayList<>(initializers);// 该方法要小心，因为每次复制都是用new一个新的ArrayList
 	}
 
 	/**
@@ -1167,6 +1188,7 @@ public class SpringApplication {
 	 * and registered with the {@link ApplicationContext}.
 	 * @param listeners the listeners to set
 	 */
+	// 调用setListeners方法时也会进行覆盖赋值的操作，之前加载的内容会被清除
 	public void setListeners(Collection<? extends ApplicationListener<?>> listeners) {
 		this.listeners = new ArrayList<>(listeners);
 	}
@@ -1209,6 +1231,7 @@ public class SpringApplication {
 	 * @return the running {@link ApplicationContext}
 	 */
 	public static ConfigurableApplicationContext run(Class<?>[] primarySources, String[] args) {
+		// 创建SpringApplication对象并执行其run方法
 		return new SpringApplication(primarySources).run(args);
 	}
 

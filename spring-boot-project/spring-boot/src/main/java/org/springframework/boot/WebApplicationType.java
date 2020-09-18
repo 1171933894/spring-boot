@@ -25,6 +25,10 @@ import org.springframework.util.ClassUtils;
  * @author Brian Clozel
  * @since 2.0.0
  */
+
+/**
+ * 定义了可能的Web应用类型，该枚举类提供了三类定义：枚举类型、推断类型的方法和用于推断的常量
+ */
 public enum WebApplicationType {
 
 	/**
@@ -58,6 +62,7 @@ public enum WebApplicationType {
 
 	private static final String REACTIVE_APPLICATION_CONTEXT_CLASS = "org.springframework.boot.web.reactive.context.ReactiveWebApplicationContext";
 
+	// 基于classpath的Web应用类型推断, 核心实现方法为ClassUtils.isPresent
 	static WebApplicationType deduceFromClasspath() {
 		if (ClassUtils.isPresent(WEBFLUX_INDICATOR_CLASS, null) && !ClassUtils.isPresent(WEBMVC_INDICATOR_CLASS, null)
 				&& !ClassUtils.isPresent(JERSEY_INDICATOR_CLASS, null)) {
