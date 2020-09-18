@@ -80,15 +80,18 @@ public class DispatcherServletAutoConfiguration {
 	 */
 	public static final String DEFAULT_DISPATCHER_SERVLET_REGISTRATION_BEAN_NAME = "dispatcherServletRegistration";
 
-	@Configuration(proxyBeanMethods = false)
-	@Conditional(DefaultDispatcherServletCondition.class)
-	@ConditionalOnClass(ServletRegistration.class)
-	@EnableConfigurationProperties({ HttpProperties.class, WebMvcProperties.class })
+	// 主要用来初始化DispatcherServlet
+	@Configuration(proxyBeanMethods = false)// 实例化配置类
+	@Conditional(DefaultDispatcherServletCondition.class)// 实例化条件：通过该类来判断
+	@ConditionalOnClass(ServletRegistration.class)// 存在指定的ServletRegistration类
+	@EnableConfigurationProperties({ HttpProperties.class, WebMvcProperties.class })// 加载HttpProperties和WebMvcProperties
 	protected static class DispatcherServletConfiguration {
 
 		@Bean(name = DEFAULT_DISPATCHER_SERVLET_BEAN_NAME)
 		public DispatcherServlet dispatcherServlet(HttpProperties httpProperties, WebMvcProperties webMvcProperties) {
+			// 创建DispatcherServlet
 			DispatcherServlet dispatcherServlet = new DispatcherServlet();
+			// 初始化DispatcherServlet各项配置
 			dispatcherServlet.setDispatchOptionsRequest(webMvcProperties.isDispatchOptionsRequest());
 			dispatcherServlet.setDispatchTraceRequest(webMvcProperties.isDispatchTraceRequest());
 			dispatcherServlet.setThrowExceptionIfNoHandlerFound(webMvcProperties.isThrowExceptionIfNoHandlerFound());
@@ -97,16 +100,19 @@ public class DispatcherServletAutoConfiguration {
 			return dispatcherServlet;
 		}
 
+		// 初始化上传文件的解析器
 		@Bean
 		@ConditionalOnBean(MultipartResolver.class)
 		@ConditionalOnMissingBean(name = DispatcherServlet.MULTIPART_RESOLVER_BEAN_NAME)
 		public MultipartResolver multipartResolver(MultipartResolver resolver) {
 			// Detect if the user has created a MultipartResolver but named it incorrectly
+			// 检测用户是否创建了MultipartResolver, 但命名不正确
 			return resolver;
 		}
 
 	}
 
+	// 核心功能就是注册dispatcherServlet，使其生效并设置一些初始化的参数
 	@Configuration(proxyBeanMethods = false)
 	@Conditional(DispatcherServletRegistrationCondition.class)
 	@ConditionalOnClass(ServletRegistration.class)
@@ -118,9 +124,13 @@ public class DispatcherServletAutoConfiguration {
 		@ConditionalOnBean(value = DispatcherServlet.class, name = DEFAULT_DISPATCHER_SERVLET_BEAN_NAME)
 		public DispatcherServletRegistrationBean dispatcherServletRegistration(DispatcherServlet dispatcherServlet,
 				WebMvcProperties webMvcProperties, ObjectProvider<MultipartConfigElement> multipartConfig) {
+			// 通过ServletRegistrationBean将dispatcherServlet注册为Servlet, 这样servlet才会生效
+			// 根据指定的DispatcherServlet和给定的path创建DispatcherServletRegistrationBean
 			DispatcherServletRegistrationBean registration = new DispatcherServletRegistrationBean(dispatcherServlet,
 					webMvcProperties.getServlet().getPath());
+			// 设置名称为dispatcherServlet
 			registration.setName(DEFAULT_DISPATCHER_SERVLET_BEAN_NAME);
+			// 设置加载优先级, 设置值默认为-1, 存在于WebMvcProperties类中
 			registration.setLoadOnStartup(webMvcProperties.getServlet().getLoadOnStartup());
 			multipartConfig.ifAvailable(registration::setMultipartConfig);
 			return registration;
@@ -128,6 +138,13 @@ public class DispatcherServletAutoConfiguration {
 
 	}
 
+	// 主要针对容器中DispatcherServlet进行一些逻辑判断
+	/**
+	 * DefaultDispatcherServletCondition的最核心业务逻辑只做了一件事，那就是：防止重复生成DispatcherServlet。
+	 * 具体实现流程为：从上下文中获得beanFactory，然后通过beanFactory获取类型为DispatcherServlet的Bean的name
+	 * 列表，然后分别判断name列表和beanFactory中是否包含名称为“dispatcherServlet”的字符串或Bean，如果包含则返回
+	 * 不匹配（已经存在，不匹配则不会重复实例化），否则返回匹配
+	 */
 	@Order(Ordered.LOWEST_PRECEDENCE - 10)
 	private static class DefaultDispatcherServletCondition extends SpringBootCondition {
 
@@ -135,19 +152,24 @@ public class DispatcherServletAutoConfiguration {
 		public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
 			ConditionMessage.Builder message = ConditionMessage.forCondition("Default DispatcherServlet");
 			ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
+			// 获取类型为DispatcherServlet的Bean名称列表
 			List<String> dispatchServletBeans = Arrays
 					.asList(beanFactory.getBeanNamesForType(DispatcherServlet.class, false, false));
+			// 如果Bean名称列表中包含dispatcherServlet, 则返回不匹配
 			if (dispatchServletBeans.contains(DEFAULT_DISPATCHER_SERVLET_BEAN_NAME)) {
 				return ConditionOutcome
 						.noMatch(message.found("dispatcher servlet bean").items(DEFAULT_DISPATCHER_SERVLET_BEAN_NAME));
 			}
+			// 如果beanFactory中包含名称为DispatcherServlet的Bean, 则返回不匹配
 			if (beanFactory.containsBean(DEFAULT_DISPATCHER_SERVLET_BEAN_NAME)) {
 				return ConditionOutcome.noMatch(
 						message.found("non dispatcher servlet bean").items(DEFAULT_DISPATCHER_SERVLET_BEAN_NAME));
 			}
+			// 如果Bean名称列表为空, 则返回匹配
 			if (dispatchServletBeans.isEmpty()) {
 				return ConditionOutcome.match(message.didNotFind("dispatcher servlet beans").atAll());
 			}
+			// 其他情况则返回匹配
 			return ConditionOutcome.match(message.found("dispatcher servlet bean", "dispatcher servlet beans")
 					.items(Style.QUOTE, dispatchServletBeans)
 					.append("and none is named " + DEFAULT_DISPATCHER_SERVLET_BEAN_NAME));
@@ -155,16 +177,19 @@ public class DispatcherServletAutoConfiguration {
 
 	}
 
+	// 主要针对注册DispatcherServlet进行一些逻辑判断
 	@Order(Ordered.LOWEST_PRECEDENCE - 10)
 	private static class DispatcherServletRegistrationCondition extends SpringBootCondition {
 
 		@Override
 		public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
 			ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
+			// 判断是否重复存在dispatcherServlet
 			ConditionOutcome outcome = checkDefaultDispatcherName(beanFactory);
 			if (!outcome.isMatch()) {
 				return outcome;
 			}
+			// 判断是否重复存在dispatcherServletRegistration
 			return checkServletRegistration(beanFactory);
 		}
 

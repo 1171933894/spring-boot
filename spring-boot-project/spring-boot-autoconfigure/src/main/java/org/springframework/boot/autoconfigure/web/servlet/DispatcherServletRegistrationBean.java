@@ -57,6 +57,7 @@ public class DispatcherServletRegistrationBean extends ServletRegistrationBean<D
 		throw new UnsupportedOperationException("URL Mapping cannot be changed on a DispatcherServlet registration");
 	}
 
+	// 重写父类的方法, 但抛出异常, 相当于禁用该操作
 	@Override
 	public void addUrlMappings(String... urlMappings) {
 		throw new UnsupportedOperationException("URL Mapping cannot be changed on a DispatcherServlet registration");

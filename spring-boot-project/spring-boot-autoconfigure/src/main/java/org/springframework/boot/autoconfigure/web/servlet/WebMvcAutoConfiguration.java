@@ -398,19 +398,24 @@ public class WebMvcAutoConfiguration {
 		@Bean
 		public WelcomePageHandlerMapping welcomePageHandlerMapping(ApplicationContext applicationContext,
 				FormattingConversionService mvcConversionService, ResourceUrlProvider mvcResourceUrlProvider) {
+			// 构造WelcomePageHandlerMapping对象
 			WelcomePageHandlerMapping welcomePageHandlerMapping = new WelcomePageHandlerMapping(
 					new TemplateAvailabilityProviders(applicationContext), applicationContext, getWelcomePage(),
 					this.mvcProperties.getStaticPathPattern());
+			// 设置拦截器
 			welcomePageHandlerMapping.setInterceptors(getInterceptors(mvcConversionService, mvcResourceUrlProvider));
 			welcomePageHandlerMapping.setCorsConfigurations(getCorsConfigurations());
 			return welcomePageHandlerMapping;
 		}
 
+		// 遍历资源路径并拼接每个路径下的index.html文件, 过滤出可用的index.html文件
 		private Optional<Resource> getWelcomePage() {
 			String[] locations = getResourceLocations(this.resourceProperties.getStaticLocations());
+			// 转换并筛选出符合条件的第一个
 			return Arrays.stream(locations).map(this::getIndexHtml).filter(this::isReadable).findFirst();
 		}
 
+		// 获取欢迎页资源的名称：路径+index.html
 		private Resource getIndexHtml(String location) {
 			return this.resourceLoader.getResource(location + "index.html");
 		}
