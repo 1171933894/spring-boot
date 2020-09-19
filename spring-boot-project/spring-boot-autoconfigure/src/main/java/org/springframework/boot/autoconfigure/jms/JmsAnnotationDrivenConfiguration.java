@@ -16,8 +16,6 @@
 
 package org.springframework.boot.autoconfigure.jms;
 
-import javax.jms.ConnectionFactory;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnJndi;
@@ -33,20 +31,25 @@ import org.springframework.jms.support.destination.DestinationResolver;
 import org.springframework.jms.support.destination.JndiDestinationResolver;
 import org.springframework.transaction.jta.JtaTransactionManager;
 
+import javax.jms.ConnectionFactory;
+
 /**
  * Configuration for Spring 4.1 annotation driven JMS.
  *
  * @author Phillip Webb
  * @author Stephane Nicoll
  */
-@Configuration(proxyBeanMethods = false)
+@Configuration(proxyBeanMethods = false)// 声明该类也是配置类
 @ConditionalOnClass(EnableJms.class)
 class JmsAnnotationDrivenConfiguration {
 
+	// DestinationResolver用于解决JMS目标的策略接口，被JmsTemplate用于将目标名称从简单的字符串解析为实际的Destination实现实例
 	private final ObjectProvider<DestinationResolver> destinationResolver;
 
+	// JtaTransactionManager是PlatformTransactionManager的实现类，它提供了Spring的JTA事务管理，也可用于分布式事务的管理
 	private final ObjectProvider<JtaTransactionManager> transactionManager;
 
+	// SimpleMessageConverter作为其简单的默认实现，能够处理TextMessages、BytesMessages、MapMessages和ObjectMessages之间的消息转换
 	private final ObjectProvider<MessageConverter> messageConverter;
 
 	private final JmsProperties properties;
