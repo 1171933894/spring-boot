@@ -16,31 +16,23 @@
 
 package org.springframework.boot.web.embedded.tomcat;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-
-import javax.naming.NamingException;
-
-import org.apache.catalina.Container;
-import org.apache.catalina.Context;
-import org.apache.catalina.Engine;
-import org.apache.catalina.Lifecycle;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.LifecycleState;
-import org.apache.catalina.Service;
+import org.apache.catalina.*;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.naming.ContextBindings;
-
 import org.springframework.boot.web.server.PortInUseException;
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.server.WebServerException;
 import org.springframework.util.Assert;
+
+import javax.naming.NamingException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * {@link WebServer} that can be used to control a Tomcat web server. Usually this class
@@ -83,7 +75,7 @@ public class TomcatWebServer implements WebServer {
 	public TomcatWebServer(Tomcat tomcat, boolean autoStart) {
 		Assert.notNull(tomcat, "Tomcat Server must not be null");
 		this.tomcat = tomcat;
-		this.autoStart = autoStart;
+		this.autoStart = autoStart;// 根据端口是否大于等于0来决定是否启动服务
 		initialize();
 	}
 
@@ -91,30 +83,36 @@ public class TomcatWebServer implements WebServer {
 		logger.info("Tomcat initialized with port(s): " + getPortsDescription(false));
 		synchronized (this.monitor) {
 			try {
+				// 将实例id添加到tomcat引擎名字中, 格式为“原引擎名字-实例id”
 				addInstanceIdToEngineName();
 
+				// 从tomcat的host中获得子Context
 				Context context = findContext();
+				// 添加生命周期的监听事件
 				context.addLifecycleListener((event) -> {
 					if (context.equals(event.getSource()) && Lifecycle.START_EVENT.equals(event.getType())) {
 						// Remove service connectors so that protocol binding doesn't
 						// happen when the service is started.
-						removeServiceConnectors();
+						removeServiceConnectors();// 移除connector, 确保当服务器启动时不会进行协议绑定
 					}
 				});
 
 				// Start the server to trigger initialization listeners
-				this.tomcat.start();
+				this.tomcat.start();// 启动服务, 触发初始化监听
 
 				// We can re-throw failure exception directly in the main thread
+				// 可以直接在主线程中重新抛出失败异常, TomcatStarter不存在或状态错误均会抛出异常
 				rethrowDeferredStartupExceptions();
 
 				try {
+					// 绑定一个命名的context到类加载器
 					ContextBindings.bindClassLoader(context, context.getNamingToken(), getClass().getClassLoader());
 				}
 				catch (NamingException ex) {
+					// 当命名不可用时(抛异常), 直接跳过并继续
 					// Naming is not enabled. Continue
 				}
-
+				// 与Jetty不同, 所有Tomcat线程都是守护程序线程。创建一个阻止非守护程序停止立即关闭
 				// Unlike Jetty, all Tomcat threads are daemon threads. We create a
 				// blocking non-daemon to stop immediate shutdown
 				startDaemonAwaitThread();

@@ -843,7 +843,7 @@ public class SpringApplication {
 	 */
 	protected void refresh(ApplicationContext applicationContext) {
 		Assert.isInstanceOf(AbstractApplicationContext.class, applicationContext);
-		((AbstractApplicationContext) applicationContext).refresh();
+		((AbstractApplicationContext) applicationContext).refresh();// 如：org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext
 	}
 
 	/**
