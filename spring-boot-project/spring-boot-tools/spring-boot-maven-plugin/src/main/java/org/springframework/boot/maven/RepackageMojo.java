@@ -16,6 +16,22 @@
 
 package org.springframework.boot.maven;
 
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.model.Dependency;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.shared.artifact.filter.collection.ArtifactsFilter;
+import org.apache.maven.shared.artifact.filter.collection.ScopeFilter;
+import org.springframework.boot.loader.tools.*;
+import org.springframework.boot.loader.tools.Layouts.Expanded;
+import org.springframework.boot.loader.tools.Layouts.Jar;
+import org.springframework.boot.loader.tools.Layouts.None;
+import org.springframework.boot.loader.tools.Layouts.War;
+import org.springframework.boot.loader.tools.Repackager.MainClassTimeoutWarningListener;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,32 +39,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
-
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.model.Dependency;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.MavenProjectHelper;
-import org.apache.maven.shared.artifact.filter.collection.ArtifactsFilter;
-import org.apache.maven.shared.artifact.filter.collection.ScopeFilter;
-
-import org.springframework.boot.loader.tools.DefaultLaunchScript;
-import org.springframework.boot.loader.tools.LaunchScript;
-import org.springframework.boot.loader.tools.Layout;
-import org.springframework.boot.loader.tools.LayoutFactory;
-import org.springframework.boot.loader.tools.Layouts.Expanded;
-import org.springframework.boot.loader.tools.Layouts.Jar;
-import org.springframework.boot.loader.tools.Layouts.None;
-import org.springframework.boot.loader.tools.Layouts.War;
-import org.springframework.boot.loader.tools.Libraries;
-import org.springframework.boot.loader.tools.Repackager;
-import org.springframework.boot.loader.tools.Repackager.MainClassTimeoutWarningListener;
 
 /**
  * Repackages existing JAR and WAR archives so that they can be executed from the command
@@ -210,11 +200,11 @@ public class RepackageMojo extends AbstractDependencyFilterMojo {
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
-		if (this.project.getPackaging().equals("pom")) {
+		if (this.project.getPackaging().equals("pom")) {// 是否为pom项目
 			getLog().debug("repackage goal could not be applied to pom project.");
 			return;
 		}
-		if (this.skip) {
+		if (this.skip) {// 是否跳过
 			getLog().debug("skipping repackaging as per configuration.");
 			return;
 		}
@@ -222,18 +212,26 @@ public class RepackageMojo extends AbstractDependencyFilterMojo {
 	}
 
 	private void repackage() throws MojoExecutionException {
+		// maven生成的jar, 最终的命名将加上.original后缀
 		Artifact source = getSourceArtifact();
+		// 最终为可执行jar, 即fat jar
 		File target = getTargetFile();
+		// 获取重新打包器, 将maven生成的jar重新打包成可执行jar
 		Repackager repackager = getRepackager(source.getFile());
+		// 查找并过滤项目运行时依赖的jar
 		Set<Artifact> artifacts = filterDependencies(this.project.getArtifacts(), getFilters(getAdditionalFilters()));
+		// 将artifacts转换成libraries
 		Libraries libraries = new ArtifactsLibraries(artifacts, this.requiresUnpack, getLog());
 		try {
+			// 获得Spring Boot启动脚本
 			LaunchScript launchScript = getLaunchScript();
+			// 执行重新打包, 生成fat jar
 			repackager.repackage(target, libraries, launchScript);
 		}
 		catch (IOException ex) {
 			throw new MojoExecutionException(ex.getMessage(), ex);
 		}
+		// 将maven生成的jar更新成.original文件
 		updateArtifact(source, target, repackager.getBackupFile());
 	}
 
