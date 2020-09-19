@@ -41,6 +41,11 @@ public interface DataSourcePoolMetadata {
 	 * information to compute the poll usage.
 	 * @return the usage value or {@code null}
 	 */
+	// 返回当前数据库连接池的情况,返回值在0至1之间(如果连接池没有限制, 值为-1)
+	// 返回值1表示：已分配最大连接数
+	// 返回值0表示：当前没有连接处于活跃状态
+	// 返回值-1表示：可以分配的连接数没有限制
+	// 返回null表示：当前数据源不提供必要信息进行计算
 	Float getUsage();
 
 	/**
@@ -48,6 +53,7 @@ public interface DataSourcePoolMetadata {
 	 * data source or {@code null} if that information is not available.
 	 * @return the number of active connections or {@code null}
 	 */
+	// 返回当前已分配的活跃连接数, 返回null, 则表示该信息不可用
 	Integer getActive();
 
 	/**
@@ -67,6 +73,7 @@ public interface DataSourcePoolMetadata {
 	 * information is not available.
 	 * @return the maximum number of active connections or {@code null}
 	 */
+	// 返回同时可分配的最大活跃连接数, 返回-1表示不限制, 返回null表示该信息不可用
 	Integer getMax();
 
 	/**
@@ -74,6 +81,7 @@ public interface DataSourcePoolMetadata {
 	 * information is not available.
 	 * @return the minimum number of active connections or {@code null}
 	 */
+	// 返回连接池中最小空闲连接数, 返回null表示该信息不可用
 	Integer getMin();
 
 	/**
@@ -81,6 +89,7 @@ public interface DataSourcePoolMetadata {
 	 * that information is not available.
 	 * @return the validation query or {@code null}
 	 */
+	// 返回查询以验证连接是否有效, 返回null表示该信息不可用
 	String getValidationQuery();
 
 	/**
@@ -89,6 +98,8 @@ public interface DataSourcePoolMetadata {
 	 * java.sql.Connection.setAutoCommit(boolean) method will not be called.)
 	 * @return the default auto-commit state or {@code null}
 	 */
+	// 连接池创建的连接的默认自动提交状态。如果未将其值设为null, 则默认采用JDBC驱动
+	// 如果设置为null, 则方法java.sql.Connection.setAutoCommit(boolean)将不会被调用
 	Boolean getDefaultAutoCommit();
 
 }

@@ -33,6 +33,7 @@ public interface DataSourcePoolMetadataProvider {
 	 * @param dataSource the data source
 	 * @return the data source pool metadata
 	 */
+	//返回一个用于管理dataSource的DataSourcePoolMetadata实例, 如果无法处理指定的数据源, 则返回null
 	DataSourcePoolMetadata getDataSourcePoolMetadata(DataSource dataSource);
 
 }

@@ -16,16 +16,15 @@
 
 package org.springframework.boot.autoconfigure.jdbc;
 
-import javax.sql.DataSource;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.log.LogMessage;
+
+import javax.sql.DataSource;
 
 /**
  * Bean to handle {@link DataSource} initialization by running {@literal schema-*.sql} on
@@ -58,10 +57,13 @@ class DataSourceInitializerInvoker implements ApplicationListener<DataSourceSche
 
 	@Override
 	public void afterPropertiesSet() {
+		// 获取DataSourceInitializer, 基于DataSourceProperties初始化DataSource
 		DataSourceInitializer initializer = getDataSourceInitializer();
 		if (initializer != null) {
+			// 执行DDL语句(schema-*.sql)
 			boolean schemaCreated = this.dataSourceInitializer.createSchema();
 			if (schemaCreated) {
+				// 初始化操作
 				initialize(initializer);
 			}
 		}
@@ -69,8 +71,10 @@ class DataSourceInitializerInvoker implements ApplicationListener<DataSourceSche
 
 	private void initialize(DataSourceInitializer initializer) {
 		try {
+			// 发布DataSourceSchemaCreatedEvent事件
 			this.applicationContext.publishEvent(new DataSourceSchemaCreatedEvent(initializer.getDataSource()));
 			// The listener might not be registered yet, so don't rely on it.
+			// 此时, 监听器可能尚未注册, 不能完全依赖, 因此主动调用
 			if (!this.initialized) {
 				this.dataSourceInitializer.initSchema();
 				this.initialized = true;

@@ -16,14 +16,13 @@
 
 package org.springframework.boot.jdbc;
 
-import java.sql.Wrapper;
-
-import javax.sql.DataSource;
-
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.jdbc.datasource.DelegatingDataSource;
 import org.springframework.util.ClassUtils;
+
+import javax.sql.DataSource;
+import java.sql.Wrapper;
 
 /**
  * Unwraps a {@link DataSource} that may have been proxied or wrapped in a custom
@@ -50,19 +49,24 @@ public final class DataSourceUnwrapper {
 	 * @return an object that implements the target type or {@code null}
 	 */
 	public static <T> T unwrap(DataSource dataSource, Class<T> target) {
+		// 检查DataSource是否能够转化为目标对象, 如果可以转化返回对象
 		if (target.isInstance(dataSource)) {
 			return target.cast(dataSource);
 		}
+		// 检查包装Wrapper是否为DataSource的包装类, 如果是则返回DataSource, 否则返回null
 		T unwrapped = safeUnwrap(dataSource, target);
 		if (unwrapped != null) {
 			return unwrapped;
 		}
+		// 判断DelegatingDataSource是否存在
 		if (DELEGATING_DATA_SOURCE_PRESENT) {
 			DataSource targetDataSource = DelegatingDataSourceUnwrapper.getTargetDataSource(dataSource);
 			if (targetDataSource != null) {
+				// 递归调用本方法
 				return unwrap(targetDataSource, target);
 			}
 		}
+		// 代理判断处理
 		if (AopUtils.isAopProxy(dataSource)) {
 			Object proxyTarget = AopProxyUtils.getSingletonTarget(dataSource);
 			if (proxyTarget instanceof DataSource) {

@@ -16,14 +16,14 @@
 
 package org.springframework.boot.autoconfigure.jdbc;
 
-import javax.sql.DataSource;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
+
+import javax.sql.DataSource;
 
 /**
  * Configuration for {@link JdbcTemplateConfiguration}.
@@ -37,8 +37,10 @@ class JdbcTemplateConfiguration {
 	@Bean
 	@Primary
 	JdbcTemplate jdbcTemplate(DataSource dataSource, JdbcProperties properties) {
+		// 根据数据源创建JdbcTemplate
 		JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 		JdbcProperties.Template template = properties.getTemplate();
+		// 设置配置文件中的配置项到JdbcTemplate
 		jdbcTemplate.setFetchSize(template.getFetchSize());
 		jdbcTemplate.setMaxRows(template.getMaxRows());
 		if (template.getQueryTimeout() != null) {

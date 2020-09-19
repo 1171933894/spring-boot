@@ -38,6 +38,7 @@ class NamedParameterJdbcTemplateConfiguration {
 	@Bean
 	@Primary
 	NamedParameterJdbcTemplate namedParameterJdbcTemplate(JdbcTemplate jdbcTemplate) {
+		// NamedParameterJdbcTemplate是JdbcTemplate的包装类，提供了基于占位符的SQL的功能
 		return new NamedParameterJdbcTemplate(jdbcTemplate);
 	}
 
