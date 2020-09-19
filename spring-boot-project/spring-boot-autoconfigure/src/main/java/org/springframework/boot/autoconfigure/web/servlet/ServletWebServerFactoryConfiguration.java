@@ -16,18 +16,12 @@
 
 package org.springframework.boot.autoconfigure.web.servlet;
 
-import java.util.stream.Collectors;
-
-import javax.servlet.Servlet;
-
 import io.undertow.Undertow;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.coyote.UpgradeProtocol;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.Loader;
 import org.eclipse.jetty.webapp.WebAppContext;
-import org.xnio.SslClientAuthMode;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -44,6 +38,10 @@ import org.springframework.boot.web.embedded.undertow.UndertowServletWebServerFa
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.xnio.SslClientAuthMode;
+
+import javax.servlet.Servlet;
+import java.util.stream.Collectors;
 
 /**
  * Configuration classes for servlet web servers
@@ -64,6 +62,7 @@ class ServletWebServerFactoryConfiguration {
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass({ Servlet.class, Tomcat.class, UpgradeProtocol.class })
+	// search属性支持的搜索策略类型定义在枚举类SearchStrategy中，包括CURRENT、ANCESTORS、ALL。这3种策略类型依次对应的作用范围为：搜索当前容器、搜索所有祖先容器（不包括当前容器）、搜索所有层级容器
 	@ConditionalOnMissingBean(value = ServletWebServerFactory.class, search = SearchStrategy.CURRENT)
 	static class EmbeddedTomcat {
 
@@ -73,10 +72,13 @@ class ServletWebServerFactoryConfiguration {
 				ObjectProvider<TomcatContextCustomizer> contextCustomizers,
 				ObjectProvider<TomcatProtocolHandlerCustomizer<?>> protocolHandlerCustomizers) {
 			TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
+			// TomcatConnectorCustomizer用于Tomcat Connector的定制化处理
 			factory.getTomcatConnectorCustomizers()
 					.addAll(connectorCustomizers.orderedStream().collect(Collectors.toList()));
+			// TomcatContextCustomizer用于Tomcat Context的定制化处理
 			factory.getTomcatContextCustomizers()
 					.addAll(contextCustomizers.orderedStream().collect(Collectors.toList()));
+			// TomcatProtocolHandlerCustomizer<?>用于Tomcat Connector中ProtocolHandler的定制化处理
 			factory.getTomcatProtocolHandlerCustomizers()
 					.addAll(protocolHandlerCustomizers.orderedStream().collect(Collectors.toList()));
 			return factory;
