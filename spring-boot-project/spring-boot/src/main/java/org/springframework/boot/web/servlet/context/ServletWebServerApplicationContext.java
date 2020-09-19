@@ -207,7 +207,11 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 	}
 
 	private void selfInitialize(ServletContext servletContext) throws ServletException {
+		// 通过指定的servletContext准备WebApplicationContext,
+		// 该方法类似于ContextLoaderListener通常提供的功能
 		prepareWebApplicationContext(servletContext);
+		// 通过ServletContextScope包装ServletContext
+		// 并将其注册为全局Web应用范围("application")对应的值和注册为ServletContext类的属性
 		registerApplicationScope(servletContext);
 		WebApplicationContextUtils.registerEnvironmentBeans(getBeanFactory(), servletContext);
 		for (ServletContextInitializer beans : getServletContextInitializerBeans()) {

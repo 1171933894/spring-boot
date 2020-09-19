@@ -16,33 +16,21 @@
 
 package org.springframework.boot.web.servlet;
 
-import java.util.AbstractCollection;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EventListener;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.servlet.Filter;
-import javax.servlet.MultipartConfigElement;
-import javax.servlet.Servlet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.aop.scope.ScopedProxyUtils;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+
+import javax.servlet.Filter;
+import javax.servlet.MultipartConfigElement;
+import javax.servlet.Servlet;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * A collection {@link ServletContextInitializer}s obtained from a
@@ -92,9 +80,14 @@ public class ServletContextInitializerBeans extends AbstractCollection<ServletCo
 	}
 
 	private void addServletContextInitializerBeans(ListableBeanFactory beanFactory) {
+		// 遍历initializerTypes列表, 这里很显然只有一个ServletContextInitializer.class值
 		for (Class<? extends ServletContextInitializer> initializerType : this.initializerTypes) {
+			// 通过getOrderedBeansOfType方法获得ListableBeanFactory中指定
+			// 类型(这里重点是ServletContextInitializer)的Bean name
+			// 和对应ServletContextInitializer实现的Entry列表
 			for (Entry<String, ? extends ServletContextInitializer> initializerBean : getOrderedBeansOfType(beanFactory,
 					initializerType)) {
+				// 将获得的ServletContextInitializer对象添加到该类的成员变量initializers中
 				addServletContextInitializerBean(initializerBean.getKey(), initializerBean.getValue(), beanFactory);
 			}
 		}
