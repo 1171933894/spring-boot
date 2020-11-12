@@ -16,14 +16,6 @@
 
 package org.springframework.boot.autoconfigure.jdbc;
 
-import java.nio.charset.Charset;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.sql.DataSource;
-
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.InitializingBean;
@@ -35,6 +27,13 @@ import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
+
+import javax.sql.DataSource;
+import java.nio.charset.Charset;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Base class for configuration of a data source.
@@ -54,23 +53,23 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 	/**
 	 * Name of the datasource. Default to "testdb" when using an embedded database.
 	 */
-	private String name;
+	private String name;//数据库名：如果使用内置数据库，默认为testdb
 
 	/**
 	 * Whether to generate a random datasource name.
 	 */
-	private boolean generateUniqueName;
+	private boolean generateUniqueName;//如果generateUniqueName==true,则不使用name,而使用uniqueName来做数据库名
 
 	/**
 	 * Fully qualified name of the connection pool implementation to use. By default, it
 	 * is auto-detected from the classpath.
 	 */
-	private Class<? extends DataSource> type;
+	private Class<? extends DataSource> type;//完整的数据库连接池名。默认从项目中检测出
 
 	/**
 	 * Fully qualified name of the JDBC driver. Auto-detected based on the URL by default.
 	 */
-	private String driverClassName;
+	private String driverClassName;//JDBC driver的完整名，默认从URL中检测出相对应的driver
 
 	/**
 	 * JDBC URL of the database.
@@ -91,38 +90,43 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 	 * JNDI location of the datasource. Class, url, username & password are ignored when
 	 * set.
 	 */
-	private String jndiName;
+	private String jndiName;//JNDI 数据源的位置：如果指定了，则数据库连接数据将会失效：driverClassName,url,username,password
 
 	/**
 	 * Initialize the datasource with available DDL and DML scripts.
 	 */
+	//初始化database使用的sql文件的模式，默认是EMBEDDED，如果是NONE就不会执行sql文件
+	//如果设置的模式和检测出来的模式不匹配，也不会执行sql文件
 	private DataSourceInitializationMode initializationMode = DataSourceInitializationMode.EMBEDDED;
 
 	/**
 	 * Platform to use in the DDL or DML scripts (such as schema-${platform}.sql or
 	 * data-${platform}.sql).
 	 */
+	//执行sql文件相关，schema-${platform}.sql,data-${platform}.sql
+	//默认执行不带 platform 的 sql 文件 + 带 platform 的 sql 文件
 	private String platform = "all";
 
 	/**
 	 * Schema (DDL) script resource references.
 	 */
-	private List<String> schema;
+	private List<String> schema;//具体的 schema 文件的位置，如果指定了这个就不会查找默认的sql文件了
 
 	/**
 	 * Username of the database to execute DDL scripts (if different).
 	 */
-	private String schemaUsername;
+	private String schemaUsername;//执行schema使用数据库的用户名
 
 	/**
 	 * Password of the database to execute DDL scripts (if different).
 	 */
+	//执行schema使用数据库的密码，如果schemaUsername和schemaPassword都不指定，就使用 **主数据源** 作为执行目的数据库！
 	private String schemaPassword;
 
 	/**
 	 * Data (DML) script resource references.
 	 */
-	private List<String> data;
+	private List<String> data;//同schema
 
 	/**
 	 * Username of the database to execute DML scripts (if different).
@@ -137,7 +141,7 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 	/**
 	 * Whether to stop if an error occurs while initializing the database.
 	 */
-	private boolean continueOnError = false;
+	private boolean continueOnError = false;//如果初始化database时报错，是否继续
 
 	/**
 	 * Statement separator in SQL initialization scripts.
@@ -149,6 +153,11 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 	 */
 	private Charset sqlScriptEncoding;
 
+	//默认的内置数据库连接信息：
+	//1 NONE(null, null, null)
+	//2 H2(EmbeddedDatabaseType.H2, "org.h2.Driver","jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE")
+	//3 DERBY(...)
+	//4 HSQL(...)
 	private EmbeddedDatabaseConnection embeddedDatabaseConnection = EmbeddedDatabaseConnection.NONE;
 
 	private Xa xa = new Xa();
@@ -160,6 +169,7 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 		this.classLoader = classLoader;
 	}
 
+	//从项目中匹配相应的内置数据库，查找是否引入了相应的依赖，如果引入了H2依赖，这里embeddedDatabaseConnection就设置成 H2
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		this.embeddedDatabaseConnection = EmbeddedDatabaseConnection.get(this.classLoader);
@@ -170,6 +180,7 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 	 * @return a {@link DataSourceBuilder} initialized with the customizations defined on
 	 * this instance
 	 */
+	// 通过 spring.datasource 属性 初始化一个DataSourceBuilder，用来方便的创建datasource，就是一个封装的方法
 	public DataSourceBuilder<?> initializeDataSourceBuilder() {
 		return DataSourceBuilder.create(getClassLoader()).type(getType()).driverClassName(determineDriverClassName())
 				.url(determineUrl()).username(determineUsername()).password(determinePassword());
@@ -217,6 +228,7 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 	 * @return the driver to use
 	 * @since 1.4.0
 	 */
+	// 智能的获取DriverClassName
 	public String determineDriverClassName() {
 		if (StringUtils.hasText(this.driverClassName)) {
 			Assert.state(driverClassIsLoadable(), () -> "Cannot load driver class: " + this.driverClassName);
@@ -226,6 +238,8 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 		if (StringUtils.hasText(this.url)) {
 			driverClassName = DatabaseDriver.fromJdbcUrl(this.url).getDriverClassName();
 		}
+		//如果走到这，还没识别出 driverClassName，且它为null，就去内置数据库中找匹配的
+		//如果项目中没有引入 内置数据库依赖，那就会报错啦
 		if (!StringUtils.hasText(driverClassName)) {
 			driverClassName = this.embeddedDatabaseConnection.getDriverClassName();
 		}
