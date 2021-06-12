@@ -258,10 +258,11 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 	 * @return
 	 */
 	private List<String> filter(List<String> configurations, AutoConfigurationMetadata autoConfigurationMetadata) {
-		long startTime = System.nanoTime();
+		// 声明需要用到的变量
+		long startTime = System.nanoTime();// 记录开始时间，用于下面统计消耗的时间
 		String[] candidates = StringUtils.toStringArray(configurations);
 		boolean[] skip = new boolean[candidates.length];
-		boolean skipped = false;
+		boolean skipped = false;// 是否有需要忽略的
 		// 通过SpringFactoriesLoader的loadFactories方法将META-INF/spring.factories中配置key为AutoConfigurationImportFilter的值进行加载
 		/**
 		 * # Auto Configuration Import Filters
@@ -271,8 +272,11 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 		 * org.springframework.boot.autoconfigure.condition.OnWebApplicationCondition
 		 */
 		for (AutoConfigurationImportFilter filter : getAutoConfigurationImportFilters()) {
+			// 设置 AutoConfigurationImportFilter 的属性们
 			invokeAwareMethods(filter);
+			// 执行批量匹配，并返回匹配结果
 			boolean[] match = filter.match(candidates, autoConfigurationMetadata);
+			// 遍历匹配结果，判断哪些需要忽略
 			for (int i = 0; i < match.length; i++) {
 				if (!match[i]) {
 					skip[i] = true;
@@ -281,15 +285,18 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 				}
 			}
 		}
+		// 如果没有需要忽略的，直接返回 configurations 即可
 		if (!skipped) {
 			return configurations;
 		}
+		// 如果存在需要忽略的，构建新的数组，排除掉忽略的
 		List<String> result = new ArrayList<>(candidates.length);
 		for (int i = 0; i < candidates.length; i++) {
 			if (!skip[i]) {
 				result.add(candidates[i]);
 			}
 		}
+		// 打印，消耗的时间，已经排除的数量
 		if (logger.isTraceEnabled()) {
 			int numberFiltered = configurations.size() - result.size();
 			logger.trace("Filtered " + numberFiltered + " auto configuration class in "

@@ -36,6 +36,7 @@ import org.springframework.util.CollectionUtils;
  *
  * @author Phillip Webb
  */
+// 因为自动配置类可能会很多，如果无需使用，而将字节码读取到内存中，这个是一种浪费
 abstract class FilteringSpringBootCondition extends SpringBootCondition
 		implements AutoConfigurationImportFilter, BeanFactoryAware, BeanClassLoaderAware {
 
@@ -45,18 +46,27 @@ abstract class FilteringSpringBootCondition extends SpringBootCondition
 
 	@Override
 	public boolean[] match(String[] autoConfigurationClasses, AutoConfigurationMetadata autoConfigurationMetadata) {
+		// 获得 ConditionEvaluationReport 对象
 		ConditionEvaluationReport report = ConditionEvaluationReport.find(this.beanFactory);
+		// 执行批量的匹配，并返回匹配结果
 		ConditionOutcome[] outcomes = getOutcomes(autoConfigurationClasses, autoConfigurationMetadata);
+		// 创建 match 数组
 		boolean[] match = new boolean[outcomes.length];
+		// 遍历 outcomes 结果数组
 		for (int i = 0; i < outcomes.length; i++) {
+			// 赋值 match 数组
 			match[i] = (outcomes[i] == null || outcomes[i].isMatch());
+			// 如果不匹配，打印日志和记录。
 			if (!match[i] && outcomes[i] != null) {
+				// 打印日志
 				logOutcome(autoConfigurationClasses[i], outcomes[i]);
+				// 记录
 				if (report != null) {
 					report.recordConditionEvaluation(autoConfigurationClasses[i], this, outcomes[i]);
 				}
 			}
 		}
+		// 返回 match 数组
 		return match;
 	}
 
@@ -112,6 +122,9 @@ abstract class FilteringSpringBootCondition extends SpringBootCondition
 		return Class.forName(className);
 	}
 
+	/**
+	 * 提供判断类是否存在的功能
+	 */
 	protected enum ClassNameFilter {
 
 		PRESENT {

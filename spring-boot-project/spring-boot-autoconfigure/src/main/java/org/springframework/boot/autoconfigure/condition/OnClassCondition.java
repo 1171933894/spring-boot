@@ -51,6 +51,7 @@ class OnClassCondition extends FilteringSpringBootCondition {
 		// best performance. More threads make things worse.
 		// 如果有多个处理器, 采用后台线程处理
 		if (Runtime.getRuntime().availableProcessors() > 1) {
+			// 在后台线程中将工作一分为二（使用单一附加线程，似乎提供了最好的性能）
 			return resolveOutcomesThreaded(autoConfigurationClasses, autoConfigurationMetadata);
 		}
 		else {
@@ -63,12 +64,16 @@ class OnClassCondition extends FilteringSpringBootCondition {
 	private ConditionOutcome[] resolveOutcomesThreaded(String[] autoConfigurationClasses,
 			AutoConfigurationMetadata autoConfigurationMetadata) {
 		int split = autoConfigurationClasses.length / 2;
+		// 将前一半，创建一个 OutcomesResolver 对象（新线程）
 		OutcomesResolver firstHalfResolver = createOutcomesResolver(autoConfigurationClasses, 0, split,
 				autoConfigurationMetadata);
+		// 将后一半，创建一个 OutcomesResolver 对象
 		OutcomesResolver secondHalfResolver = new StandardOutcomesResolver(autoConfigurationClasses, split,
 				autoConfigurationClasses.length, autoConfigurationMetadata, getBeanClassLoader());
+		// 执行解析（匹配）
 		ConditionOutcome[] secondHalf = secondHalfResolver.resolveOutcomes();
 		ConditionOutcome[] firstHalf = firstHalfResolver.resolveOutcomes();
+		// 创建 outcomes 结果数组，然后合并结果，最后返回
 		ConditionOutcome[] outcomes = new ConditionOutcome[autoConfigurationClasses.length];
 		System.arraycopy(firstHalf, 0, outcomes, 0, firstHalf.length);
 		System.arraycopy(secondHalf, 0, outcomes, split, secondHalf.length);
