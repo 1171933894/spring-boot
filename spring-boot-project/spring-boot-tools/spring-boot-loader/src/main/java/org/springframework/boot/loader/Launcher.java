@@ -37,6 +37,14 @@ import org.springframework.boot.loader.jar.JarFile;
  * @author Dave Syer
  * @since 1.0.0
  */
+
+/**
+ * 直接找不到 Application 类，因为它在 BOOT-INF/classes 目录下，不符合 Java 默认的 jar 包的加载规则。因此，需要通过 JarLauncher 启动加载。
+ *
+ * 当然实际还有一个更重要的原因，Java 规定可执行器的 jar 包禁止嵌套其它 jar 包。但是我们可以看到 BOOT-INF/lib 目录下，实际有 Spring Boot 应用
+ * 依赖的所有 jar 包。因此，spring-boot-loader 项目自定义实现了 ClassLoader 实现类 LaunchedURLClassLoader，支持加载 BOOT-INF/classes
+ * 目录下的 .class 文件，以及 BOOT-INF/lib 目录下的 jar 包。
+ */
 public abstract class Launcher {
 
 	/**
@@ -46,8 +54,11 @@ public abstract class Launcher {
 	 * @throws Exception if the application fails to launch
 	 */
 	protected void launch(String[] args) throws Exception {
+		// 注册 URL 协议的处理器
 		JarFile.registerUrlProtocolHandler();
+		// 创建类加载器
 		ClassLoader classLoader = createClassLoader(getClassPathArchives());
+		// 执行启动类的 main 方法
 		launch(args, getMainClass(), classLoader);
 	}
 
@@ -83,7 +94,9 @@ public abstract class Launcher {
 	 * @throws Exception if the launch fails
 	 */
 	protected void launch(String[] args, String mainClass, ClassLoader classLoader) throws Exception {
+		// 设置 LaunchedURLClassLoader 作为类加载器
 		Thread.currentThread().setContextClassLoader(classLoader);
+		// 创建 MainMethodRunner 对象，并执行 run 方法，启动 Spring Boot 应用
 		createMainMethodRunner(mainClass, args, classLoader).run();
 	}
 

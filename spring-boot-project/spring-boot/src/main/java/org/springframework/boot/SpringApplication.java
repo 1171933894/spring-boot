@@ -170,10 +170,16 @@ public class SpringApplication {
 
 	private static final Log logger = LogFactory.getLog(SpringApplication.class);
 
+	/**
+	 * 主要的 Java Config 类的数组，主要的 Java Config 类的数组
+	 */
 	private Set<Class<?>> primarySources;
 
 	private Set<String> sources = new LinkedHashSet<>();
 
+	/**
+	 * 调用 #deduceMainApplicationClass() 方法，获得是调用了哪个 #main(String[] args) 方法
+	 */
 	private Class<?> mainApplicationClass;
 
 	private Banner.Mode bannerMode = Banner.Mode.CONSOLE;
@@ -194,14 +200,23 @@ public class SpringApplication {
 
 	private Class<? extends ConfigurableApplicationContext> applicationContextClass;
 
+	/**
+	 * Web 应用类型
+	 */
 	private WebApplicationType webApplicationType;
 
 	private boolean headless = true;
 
 	private boolean registerShutdownHook = true;
 
+	/**
+	 * ApplicationContextInitializer 数组
+	 */
 	private List<ApplicationContextInitializer<?>> initializers;
 
+	/**
+	 * ApplicationListener 数组
+	 */
 	private List<ApplicationListener<?>> listeners;
 
 	private Map<String, Object> defaultProperties;
@@ -255,7 +270,7 @@ public class SpringApplication {
 		/**
 		 * 三种实现注册方法：
 		 * 1）定义在spring.factories文件中被SpringFacotriesLoader发现注册
-		 * 2）SpringAplication初始化完毕后手动添加（添加自定义ContextInitializer, 注意会覆盖掉默认配置的）
+		 * 2）SpringApplication初始化完毕后手动添加（添加自定义ContextInitializer, 注意会覆盖掉默认配置的）
 		 * 3）定义环境变量DelegatingApplicationContextInitializer发现注册（优先级最高）
 		 */
 		// 注意：该初始化器在refresh前执行
@@ -303,7 +318,7 @@ public class SpringApplication {
 		stopWatch.start();// 启动统计
 		ConfigurableApplicationContext context = null;
 		Collection<SpringBootExceptionReporter> exceptionReporters = new ArrayList<>();
-		// 配置 headless 属性
+		// 配置 headless 属性 (这个逻辑，可以无视，和 AWT 相关)
 		configureHeadlessProperty();
 		// 获得 SpringApplicationRunListener 数组，该数组封装于SpringApplicationRunListeners对象的listeners中
 		SpringApplicationRunListeners listeners = getRunListeners(args);
@@ -317,7 +332,7 @@ public class SpringApplication {
 			configureIgnoreBeanInfo(environment);// 忽略信息配置
 			// 打印Banner
 			Banner printedBanner = printBanner(environment);
-			// Spring应用上下文的创建
+			// Spring应用上下文的创建（默认为：AnnotationConfigServletWebServerApplicationContext）
 			context = createApplicationContext();
 			// 异常报告器
 			exceptionReporters = getSpringFactoriesInstances(SpringBootExceptionReporter.class,
@@ -340,6 +355,7 @@ public class SpringApplication {
 			 * 调用启动加载器（调用ApplicationRunner和CommandLineRunner的运行方法）
 			 * 如果有多个实现类，可通过@Order注解或实现Ordered接口来控制执行顺序
 			 */
+			// 注意：这个抛出异常了，会导致启动失败
 			callRunners(context, applicationArguments);
 		}
 		catch (Throwable ex) {
@@ -470,7 +486,7 @@ public class SpringApplication {
 	}
 
 	private SpringApplicationRunListeners getRunListeners(String[] args) {
-		// 构造Class数组（SpringApplicationRunListener的实现类必须有默认的构造方法，且构造方法的参数必须依次为SpringApplication和String[ ]类型）
+		// 构造Class数组（SpringApplicationRunListener的实现类必须有默认的构造方法，且构造方法的参数必须依次为SpringApplication和String[]类型）
 		Class<?>[] types = new Class<?>[] { SpringApplication.class, String[].class };
 		// 调用SpringApplicationRunListeners构造方法
 		return new SpringApplicationRunListeners(logger,

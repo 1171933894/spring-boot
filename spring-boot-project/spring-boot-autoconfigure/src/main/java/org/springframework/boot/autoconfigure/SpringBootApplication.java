@@ -43,7 +43,7 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Inherited
+@Inherited// @Inherited 声明出来的注解，只有在类上使用时才会有效，对方法，属性等其他无效
 @SpringBootConfiguration
 @EnableAutoConfiguration// 开启自动配置的注解
 @ComponentScan(excludeFilters = { @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
@@ -54,7 +54,7 @@ public @interface SpringBootApplication {
 	 * Exclude specific auto-configuration classes such that they will never be applied.
 	 * @return the classes to exclude
 	 */
-	// 排除指定自动配置类（该成员属性覆盖了@SpringBoot-Application中组合的@EnableAutoConfiguration中定义的exclude成员属性）
+	// 排除指定自动配置类（该成员属性覆盖了@SpringBootApplication中组合的@EnableAutoConfiguration中定义的exclude成员属性）
 	@AliasFor(annotation = EnableAutoConfiguration.class)
 	/**
 	 * 该注解用于桥接到其他注解，该注解的属性中指定了所桥接的注解类。如果点进去查看，会发现@SpringBootApplication
@@ -69,7 +69,7 @@ public @interface SpringBootApplication {
 	 * @return the class names to exclude
 	 * @since 1.3.0
 	 */
-	// 排除指定自动配置类名（该成员属性覆盖了@SpringBoot-Application中组合的@EnableAutoConfiguration中定义的exclude成员属性）
+	// 排除指定自动配置类名（该成员属性覆盖了@SpringBootApplication中组合的@EnableAutoConfiguration中定义的exclude成员属性）
 	@AliasFor(annotation = EnableAutoConfiguration.class)
 	String[] excludeName() default {};
 
@@ -131,7 +131,6 @@ public @interface SpringBootApplication {
 	 * @return whether to proxy {@code @Bean} methods
 	 */
 	// 指定是否代理@Bean方法以强制执行bean的生命周期行为
-
 	/**
 	 * 指定是否代理@Bean方法以强制执行bean的生命周期行为。此功能需要通过运行时生成CGLIB子类来实现方法拦截。
 	 * 该子类有一定的限制，比如配置类及其方法不允许声明为final等。proxyBeanMethods的默认值为true，允许

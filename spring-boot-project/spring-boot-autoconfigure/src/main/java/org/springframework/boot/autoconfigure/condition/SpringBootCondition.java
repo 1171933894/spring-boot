@@ -36,17 +36,38 @@ import org.springframework.util.StringUtils;
  * @author Greg Turnquist
  * @since 1.0.0
  */
+
+/**
+ * @ConditionalOnBean：当容器里有指定 Bean 的条件下
+ * @ConditionalOnMissingBean：当容器里没有指定 Bean 的情况下
+ * @ConditionalOnSingleCandidate：当指定 Bean 在容器中只有一个，或者虽然有多个但是指定首选 Bean
+ * @ConditionalOnClass：当类路径下有指定类的条件下。
+ * @ConditionalOnMissingClass：当类路径下没有指定类的条件下
+ * @ConditionalOnProperty：指定的属性是否有指定的值
+ * @ConditionalOnResource：类路径是否有指定的值
+ * @ConditionalOnExpression：基于 SpEL 表达式作为判断条件
+ * @ConditionalOnJava：基于 Java 版本作为判断条件
+ * @ConditionalOnJndi：在 JNDI 存在的条件下差在指定的位置
+ * @ConditionalOnNotWebApplication：当前项目不是 Web 项目的条件下
+ * @ConditionalOnWebApplication：当前项目是 Web项 目的条件下
+ */
+// 实现 Condition 接口，Spring Boot Condition 的抽象基类，主要用于提供相应的日志，帮助开发者判断哪些被进行加载
 public abstract class SpringBootCondition implements Condition {
 
 	private final Log logger = LogFactory.getLog(getClass());
 
 	@Override
 	public final boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+		// 获得注解的是方法名还是类名
 		String classOrMethodName = getClassOrMethodName(metadata);
 		try {
+			// 条件匹配结果
 			ConditionOutcome outcome = getMatchOutcome(context, metadata);
+			// 打印结果
 			logOutcome(classOrMethodName, outcome);
+			// 记录
 			recordEvaluation(context, classOrMethodName, outcome);
+			// 返回是否匹配
 			return outcome.isMatch();
 		}
 		catch (NoClassDefFoundError ex) {
