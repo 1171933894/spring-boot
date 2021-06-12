@@ -44,6 +44,7 @@ public class DelegatingApplicationContextInitializer
 
 	// NOTE: Similar to org.springframework.web.context.ContextLoader
 
+	// 环境变量配置的属性
 	private static final String PROPERTY_NAME = "context.initializer.classes";
 
 	private int order = 0;// 优先级最高
@@ -51,7 +52,9 @@ public class DelegatingApplicationContextInitializer
 	@Override
 	public void initialize(ConfigurableApplicationContext context) {
 		ConfigurableEnvironment environment = context.getEnvironment();
+		// 获得环境变量配置的 ApplicationContextInitializer 集合们
 		List<Class<?>> initializerClasses = getInitializerClasses(environment);
+		// 如果非空，则进行初始化
 		if (!initializerClasses.isEmpty()) {
 			applyInitializerClasses(context, initializerClasses);
 		}
