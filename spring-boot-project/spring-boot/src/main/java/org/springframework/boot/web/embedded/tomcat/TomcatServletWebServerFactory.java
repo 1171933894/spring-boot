@@ -88,7 +88,7 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 	/**
 	 * The class name of default protocol used.
 	 */
-	public static final String DEFAULT_PROTOCOL = "org.apache.coyote.http11.Http11NioProtocol";
+	public static final String DEFAULT_PROTOCOL = "org.apache.coyote.http11.Http11NioProtocol";// 注意：是NIO
 
 	private File baseDirectory;
 

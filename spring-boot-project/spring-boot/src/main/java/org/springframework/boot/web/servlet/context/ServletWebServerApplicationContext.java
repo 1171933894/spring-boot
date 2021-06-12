@@ -130,6 +130,9 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 		}
 	}
 
+	/**
+	 * 在容器初始化时，完成 WebServer 的创建（不包括启动）
+	 */
 	@Override
 	protected void onRefresh() {
 		super.onRefresh();
@@ -159,8 +162,12 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 	private void createWebServer() {
 		WebServer webServer = this.webServer;
 		ServletContext servletContext = getServletContext();
+		// 如果 webServer 为空，说明未初始化
 		if (webServer == null && servletContext == null) {
+			// 获得 ServletWebServerFactory 对象
 			ServletWebServerFactory factory = getWebServerFactory();
+			// 获得 ServletContextInitializer 对象
+			// 创建（获得） WebServer 对象
 			this.webServer = factory.getWebServer(getSelfInitializer());
 		}
 		else if (servletContext != null) {
@@ -171,6 +178,7 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 				throw new ApplicationContextException("Cannot initialize servlet context", ex);
 			}
 		}
+		// 初始化 PropertySource
 		initPropertySources();
 	}
 
@@ -182,7 +190,7 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 	 */
 	protected ServletWebServerFactory getWebServerFactory() {
 		// Use bean names so that we don't consider the hierarchy
-		// 使用Bean name数组的好处是可以不用考虑层级关系
+		// 获得 ServletWebServerFactory 类型对应的 Bean 的名字们
 		String[] beanNames = getBeanFactory().getBeanNamesForType(ServletWebServerFactory.class);
 		if (beanNames.length == 0) {
 			throw new ApplicationContextException("Unable to start ServletWebServerApplicationContext due to missing "
@@ -289,9 +297,11 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 	}
 
 	private void stopAndReleaseWebServer() {
+		// 获得 WebServer 对象，避免被多线程修改了
 		WebServer webServer = this.webServer;
 		if (webServer != null) {
 			try {
+				// 停止 WebServer 对象
 				webServer.stop();
 				this.webServer = null;
 			}
