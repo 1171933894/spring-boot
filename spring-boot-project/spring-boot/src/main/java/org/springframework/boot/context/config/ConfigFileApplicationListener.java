@@ -177,9 +177,11 @@ public class ConfigFileApplicationListener implements EnvironmentPostProcessor, 
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
 		// 对应前面发布的事件, 执行此业务逻辑
+		// spring环境准备好了，可以开始准备初始化Environment变量
 		if (event instanceof ApplicationEnvironmentPreparedEvent) {
 			onApplicationEnvironmentPreparedEvent((ApplicationEnvironmentPreparedEvent) event);
 		}
+		// Spring 容器初始化好了
 		if (event instanceof ApplicationPreparedEvent) {
 			onApplicationPreparedEvent(event);
 		}
@@ -207,6 +209,7 @@ public class ConfigFileApplicationListener implements EnvironmentPostProcessor, 
 
 	private void onApplicationPreparedEvent(ApplicationEvent event) {
 		this.logger.switchTo(ConfigFileApplicationListener.class);
+		// 添加 PropertySourceOrderingPostProcessor 处理器
 		addPostProcessors(((ApplicationPreparedEvent) event).getApplicationContext());
 	}
 
@@ -279,6 +282,9 @@ public class ConfigFileApplicationListener implements EnvironmentPostProcessor, 
 			return Ordered.HIGHEST_PRECEDENCE;
 		}
 
+		/**
+		 * 将 DEFAULT_PROPERTIES 的 PropertySource 属性源，添加到 environment 的尾部
+		 */
 		@Override
 		public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
 			reorderSources(this.context.getEnvironment());
