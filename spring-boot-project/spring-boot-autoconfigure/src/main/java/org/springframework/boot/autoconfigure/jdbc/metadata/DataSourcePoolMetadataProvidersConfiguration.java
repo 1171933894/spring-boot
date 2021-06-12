@@ -35,6 +35,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Stephane Nicoll
  * @since 1.2.0
  */
+//为数据源注册一个DataSourcePoolMetadataProvider实例，这个实例主要用于获取内置数据源的一些状态
 @Configuration(proxyBeanMethods = false)
 public class DataSourcePoolMetadataProvidersConfiguration {
 
@@ -65,6 +66,7 @@ public class DataSourcePoolMetadataProvidersConfiguration {
 			return (dataSource) -> {
 				HikariDataSource hikariDataSource = DataSourceUnwrapper.unwrap(dataSource, HikariDataSource.class);
 				if (hikariDataSource != null) {
+					//这里就返回了一个HikariDataSourcePoolMetadata实例，算是代理数据源吧
 					return new HikariDataSourcePoolMetadata(hikariDataSource);
 				}
 				return null;

@@ -26,6 +26,7 @@ import javax.sql.DataSource;
  * @author Artsiom Yudovin
  * @since 2.0.0
  */
+//每个都可能返回null，如果数据源没有提供相应的信息
 public interface DataSourcePoolMetadata {
 
 	/**
