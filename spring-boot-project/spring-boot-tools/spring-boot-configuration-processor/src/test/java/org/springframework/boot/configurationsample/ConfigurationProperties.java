@@ -29,6 +29,13 @@ import java.lang.annotation.Target;
  * @author Stephane Nicoll
  * @author Phillip Webb
  */
+
+/**
+ * 注解有两种使用方法。总结来说：
+ *
+ * 第一种，@Component + @ConfigurationProperties
+ * 第二种，@EnableConfigurationProperties + ConfigurationProperties
+ */
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
